@@ -1,4 +1,4 @@
-# CLAUDE.md — AI Assistant Guide for SBB
+# CLAUDE.md — AI Assistant Guide for Warmside
 
 This file is the authoritative guide for AI assistants (Claude Code and similar tools) working in this repository. Keep it up to date as the project evolves.
 
@@ -6,46 +6,74 @@ This file is the authoritative guide for AI assistants (Claude Code and similar 
 
 ## Project Overview
 
-> **TODO:** Replace this section with a 2–3 sentence description of what this project does, who it's for, and what problem it solves.
+**Warmside** is an automated estimate follow-up SaaS for residential contractors (roofers, HVAC, painters, landscapers, fence builders, kitchen/bath remodelers). When a contractor sends an estimate to a prospect, they BCC a unique Warmside address — this triggers a 5-touch SMS+email sequence over 21 days, written in the contractor's voice, that runs on autopilot until the prospect replies. The moment they reply, Warmside stops and forwards the message to the contractor's phone.
+
+Warmside is the first product under **Vigil**, a Vigil ecosystem of tools for service-based businesses owned by Tom Walker LLC. The core philosophy: Vigil only profits when the client profits.
 
 | Field | Value |
 |---|---|
-| Project name | SBB |
-| Status | Early development |
+| Product name | Warmside |
+| Parent brand | Vigil (Tom Walker LLC) |
+| Status | Active development — Phase 1 scaffold complete |
+| Pricing | $129/mo (Standard) · $249/mo (Volume) |
 | Live URL | _TBD_ |
-| Docs / Wiki | _TBD_ |
 | Owner | shawn9097 |
 
 ---
 
 ## Repository Structure
 
-> **TODO:** Update this tree once the initial directory layout is established.
-
 ```
 SBB/
-├── CLAUDE.md          ← This file
-├── README.md          ← Human-facing project README (create separately)
-└── ...                ← Source dirs will be documented here
+├── CLAUDE.md                        ← This file
+├── package.json                     ← "warmside" npm package
+├── next.config.ts
+├── tsconfig.json
+├── vercel.json                      ← Cron job config (daily at 9am UTC)
+├── .env.example                     ← All required env vars with descriptions
+├── src/
+│   ├── app/
+│   │   ├── page.tsx                 ← Marketing landing page
+│   │   ├── signup/                  ← Onboarding + Stripe checkout
+│   │   ├── onboarding/              ← Voice Twin intake form
+│   │   ├── dashboard/               ← Contractor dashboard
+│   │   └── api/
+│   │       ├── inbound-email/       ← Postmark BCC webhook → creates prospect + campaign
+│   │       ├── inbound-sms/         ← Twilio webhook → classifies reply, updates campaign
+│   │       ├── stripe/              ← Stripe subscription lifecycle webhooks
+│   │       ├── cron/                ← Daily touchpoint sender (Vercel Cron)
+│   │       └── close-job/           ← Contractor marks job closed → Touchstone Receipt
+│   ├── components/                  ← Reusable UI components
+│   ├── lib/
+│   │   ├── supabase.ts              ← DB client (browser + admin)
+│   │   ├── stripe.ts                ← Stripe client + price IDs
+│   │   ├── twilio.ts                ← SMS sender + reply forwarder
+│   │   ├── resend.ts                ← Email sender
+│   │   ├── claude.ts                ← Voice Twin + niche detection + reply classification
+│   │   ├── sequences.ts             ← All 6 trade sequence templates + variable substitution
+│   │   └── voice-twin.ts            ← (future) Voice DNA helpers
+│   └── types/
+│       └── index.ts                 ← All shared TypeScript types
+└── supabase/
+    └── migrations/
+        └── 001_initial_schema.sql   ← Run this first in Supabase SQL editor
 ```
-
-Describe each top-level directory's purpose as it is added.
 
 ---
 
 ## Tech Stack
 
-> **TODO:** Fill in the chosen stack once decided.
-
 | Layer | Choice | Notes |
 |---|---|---|
-| Language | _TBD_ | |
-| Runtime / Framework | _TBD_ | |
-| Database | _TBD_ | |
-| Cache | _TBD_ | |
-| Auth | _TBD_ | |
-| Infrastructure | _TBD_ | |
-| CI/CD | _TBD_ | |
+| Language | TypeScript | Strict mode enabled |
+| Runtime / Framework | Next.js 15 (App Router) | API routes + frontend in one repo |
+| Database + Auth | Supabase (Postgres) | RLS enabled; admin client server-only |
+| Payments | Stripe | $129/mo Standard, $249/mo Volume |
+| Email (outbound) | Resend | Sequence follow-up emails |
+| SMS (outbound) | Twilio | Sequence follow-up texts + reply forwarding |
+| Inbound email | Postmark Inbound | Receives BCC'd estimate emails, fires webhook |
+| AI | Claude API (Anthropic) | Voice Twin personalisation + niche detection + reply classification |
+| Deployment | Vercel | Cron via vercel.json (daily 9am UTC) |
 
 ---
 
@@ -53,52 +81,53 @@ Describe each top-level directory's purpose as it is added.
 
 ### Prerequisites
 
-> **TODO:** List required tooling (e.g., Node >= 20, Python >= 3.12, Docker, etc.)
+- Node.js >= 20
+- npm >= 10
+- A Supabase project (free tier works for dev)
+- A Stripe account with test keys
+- A Twilio account with a phone number
+- A Resend account
+- A Postmark account (for inbound email)
+- An Anthropic API key
 
 ### Install
 
 ```sh
-# TODO: add install steps, e.g.:
-# npm install
-# pip install -e ".[dev]"
+npm install
 ```
 
 ### Environment Variables
 
-Copy the example env file and fill in values:
-
 ```sh
 cp .env.example .env
+# Fill in all values — see .env.example for descriptions
 ```
 
-See the [Environment Variables](#environment-variables) section for all required variables.
+### Run DB migrations
+
+Open your Supabase project → SQL Editor → paste and run `supabase/migrations/001_initial_schema.sql`.
 
 ### Run Locally
 
 ```sh
-# TODO: add the command to start the dev server, e.g.:
-# npm run dev
-# uvicorn app.main:app --reload
+npm run dev
+# App available at http://localhost:3000
 ```
 
 ---
 
 ## Common Commands
 
-> **TODO:** Fill in real commands once the project toolchain is set.
-
 | Task | Command |
 |---|---|
-| Install deps | `TODO` |
-| Start dev server | `TODO` |
-| Run all tests | `TODO` |
-| Run a single test | `TODO` |
-| Lint | `TODO` |
-| Format | `TODO` |
-| Type check | `TODO` |
-| Build for production | `TODO` |
-| Run DB migrations | `TODO` |
-| Seed database | `TODO` |
+| Install deps | `npm install` |
+| Start dev server | `npm run dev` |
+| Type check | `npx tsc --noEmit` |
+| Lint | `npm run lint` |
+| Build for production | `npm run build` |
+| Run DB migrations | Paste SQL file into Supabase SQL Editor |
+| Test inbound email | POST to `/api/inbound-email` with a Postmark-shaped payload |
+| Test cron manually | `GET /api/cron` with header `x-cron-secret: <CRON_SECRET>` |
 
 ---
 
