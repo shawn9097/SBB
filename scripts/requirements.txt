@@ -1,0 +1,15 @@
+# Install:
+#   pip install -r requirements.txt
+#
+# System dependency for pyrubberband (Ubuntu/Debian):
+#   sudo apt install rubberband-cli
+#
+# Without rubberband the script falls back to librosa's phase vocoder.
+# Formant variation is disabled without rubberband.
+
+numpy>=1.24,<3.0
+scipy>=1.10,<2.0
+soundfile>=0.12,<1.0
+librosa>=0.10,<1.0
+pyrubberband>=0.3,<1.0
+pedalboard>=0.9,<1.0
