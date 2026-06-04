@@ -2,9 +2,10 @@
 humanize_vocals.py — Make AI-generated vocals sound more human.
 
 Processing chain:
-  1. Cleanup + EQ   (high-shelf cut, sibilance reduction, metal vocal tonal shaping)
+  0. Noise reduction (spectral gating — removes AI generation static/noise floor)
+  1. Cleanup + EQ   (aggressive high-shelf cut, sibilance cut, metal vocal tonal shaping)
   2. Compression    (peak-follower: punch and presence)
-  3. Saturation     (soft-clip drive: adds harmonic character and uniqueness)
+  3. Saturation     (parallel soft-clip: dry + heavy-drive blend for gritty character)
   4. Pitch          (subtle micro-variations, 2s windows — no OLA chunk artifacts)
   5. Amplitude      (slow breath-support envelope)
   6. Breath noise   (bandpass-filtered noise, voice-gated)
@@ -13,7 +14,8 @@ Processing chain:
 Usage:
     python3 humanize_vocals.py input.wav [output.wav] [options]
 
-    --intensity 0.0-1.0   master effect depth (default 0.3)
+    --intensity 0.0-1.0   master effect depth (default 0.5)
+    --no-denoise          skip noise reduction stage
     --no-eq               skip EQ + cleanup
     --no-saturation       skip saturation
     --no-compression      skip compression
@@ -37,6 +39,12 @@ from pathlib import Path
 import numpy as np
 import scipy.signal
 import soundfile as sf
+
+try:
+    import noisereduce as nr
+    HAS_NOISEREDUCE = True
+except ImportError:
+    HAS_NOISEREDUCE = False
 
 try:
     import pyrubberband as rb
@@ -109,16 +117,26 @@ def _sos_peak(freq: float, gain_db: float, Q: float, sr: int) -> np.ndarray:
 
 @dataclass
 class HumanizeParams:
-    saturation_drive:    float = 1.3
+    # Noise reduction
+    denoise_prop:        float = 0.75   # proportion of noise to reduce (0–1)
+    # Saturation — parallel blend of heavy drive + dry
+    sat_drive:           float = 3.0    # drive on the parallel distorted copy
+    sat_mix:             float = 0.30   # how much of the driven copy to blend in
+    # Compression
     comp_threshold_db:   float = -18.0
     comp_ratio:          float = 4.0
     comp_makeup_db:      float = 3.0
+    # Pitch
     micro_pitch_cents:   float = 5.0
     vibrato_depth_cents: float = 8.0
     vibrato_rate_hz:     float = 5.5
     vibrato_jitter:      float = 0.3
+    # Amplitude
     amp_variation_db:    float = 1.5
+    # Breath
     breath_level_db:     float = -52.0
+    # Feature flags
+    do_denoise:          bool = True
     do_eq:               bool = True
     do_compression:      bool = True
     do_saturation:       bool = True
@@ -129,14 +147,16 @@ class HumanizeParams:
 def params_from_intensity(t: float) -> HumanizeParams:
     t = float(np.clip(t, 0.0, 1.0))
     p = HumanizeParams()
-    p.saturation_drive    = 1.0 + t * 1.0           # 1.0 → 2.0
-    p.comp_threshold_db   = -12.0 + t * -12.0       # -12 → -24 dBFS
-    p.comp_ratio          = 1.5 + t * 6.5            # 1.5:1 → 8:1
-    p.comp_makeup_db      = t * 6.0                  # 0 → 6 dB
-    p.micro_pitch_cents   = 1.0 + t * 9.0           # 1 → 10 cents
-    p.vibrato_depth_cents = t * 15.0                 # 0 → 15 cents
-    p.amp_variation_db    = 0.3 + t * 2.7            # 0.3 → 3.0 dB
-    p.breath_level_db     = -60.0 + t * 16.0         # -60 → -44 dBFS
+    p.denoise_prop        = 0.5 + t * 0.4            # 0.5 → 0.9
+    p.sat_drive           = 2.0 + t * 3.0            # 2.0 → 5.0 (parallel heavy drive)
+    p.sat_mix             = 0.15 + t * 0.30          # 0.15 → 0.45 (dry blend ratio)
+    p.comp_threshold_db   = -12.0 + t * -14.0        # -12 → -26 dBFS
+    p.comp_ratio          = 2.0 + t * 6.0             # 2:1 → 8:1
+    p.comp_makeup_db      = t * 6.0                   # 0 → 6 dB
+    p.micro_pitch_cents   = 1.0 + t * 9.0            # 1 → 10 cents
+    p.vibrato_depth_cents = t * 15.0                  # 0 → 15 cents
+    p.amp_variation_db    = 0.3 + t * 2.7             # 0.3 → 3.0 dB
+    p.breath_level_db     = -60.0 + t * 16.0          # -60 → -44 dBFS
     return p
 
 
@@ -167,16 +187,41 @@ def _vibrato_lfo(n: int, sr: int, rate_hz: float, depth_cents: float,
     return np.sin(phase) * depth_cents
 
 
+# ─── Stage 0: Noise reduction ────────────────────────────────────────────────
+
+def apply_denoise(audio: np.ndarray, sr: int, params: HumanizeParams,
+                  verbose: bool) -> np.ndarray:
+    if not HAS_NOISEREDUCE:
+        if verbose:
+            print("  [denoise]    skipped (noisereduce not installed)")
+        return audio
+    t0 = time.time()
+    # Use the first 0.5s as noise profile reference (Suno files start with silence/noise)
+    noise_clip = audio[:min(int(0.5 * sr), len(audio))]
+    result = nr.reduce_noise(
+        y=audio.astype(np.float32),
+        sr=sr,
+        y_noise=noise_clip.astype(np.float32),
+        stationary=True,
+        prop_decrease=params.denoise_prop,
+        n_std_thresh_stationary=1.5,
+        n_jobs=1,
+    ).astype(np.float32)
+    if verbose:
+        print(f"  [denoise]    prop={params.denoise_prop:.2f}  {time.time()-t0:.2f}s")
+    return result
+
+
 # ─── Stage 1+2: EQ (cleanup + tonal shaping) ─────────────────────────────────
 
 def apply_eq(audio: np.ndarray, sr: int, verbose: bool) -> np.ndarray:
     sections = np.vstack([
-        # Cleanup: remove Suno's compressed "static" (harsh high-frequency artifacts)
-        _sos_high_shelf(10_000, -3.0, sr),       # -3 dB shelf above 10 kHz
-        _sos_peak(8_000, -2.0, 1.5, sr),         # -2 dB at 8 kHz (harsh sibilance)
+        # Cleanup: aggressively cut Suno's harsh high-frequency artifacts
+        _sos_high_shelf(8_000, -5.0, sr),        # -5 dB shelf above 8 kHz (was -3 dB at 10kHz)
+        _sos_peak(7_000, -3.0, 1.5, sr),         # -3 dB at 7 kHz (AI sibilance/static)
         # Tonal identity: metal vocal character
-        _sos_low_shelf(200, +2.0, sr),            # +2 dB warmth/chest
-        _sos_peak(800, -3.0, 1.5, sr),            # -3 dB nasal/boxy AI quality
+        _sos_low_shelf(200, +3.0, sr),            # +3 dB warmth/chest (up from +2)
+        _sos_peak(800, -4.0, 1.5, sr),            # -4 dB nasal/boxy AI quality (up from -3)
         _sos_peak(2_500, -2.0, 2.0, sr),          # -2 dB glassy AI midrange
         _sos_peak(5_000, +3.0, 1.0, sr),          # +3 dB presence/cut-through
     ])
@@ -228,23 +273,28 @@ def apply_compression(audio: np.ndarray, sr: int, params: HumanizeParams,
 
     if verbose:
         raw_gr = gain_frames / makeup
-        peak_gr_db = -20 * np.log10(np.max(np.minimum(raw_gr, 1.0)))
+        peak_gr_db = -20 * np.log10(np.min(np.maximum(raw_gr, 1e-10)))
         print(f"  [compress]   {params.comp_ratio:.1f}:1 @ {params.comp_threshold_db:.0f} dBFS  "
               f"peak GR ≈{peak_gr_db:.1f} dB  makeup +{params.comp_makeup_db:.1f} dB")
 
     return (audio * gain).astype(np.float32)
 
 
-# ─── Stage 4: Saturation ──────────────────────────────────────────────────────
+# ─── Stage 4: Saturation (parallel) ──────────────────────────────────────────
 
 def apply_saturation(audio: np.ndarray, params: HumanizeParams,
                      verbose: bool) -> np.ndarray:
-    drive = params.saturation_drive
-    if drive <= 1.0 + 1e-4:
+    """Parallel saturation: blend a heavily driven copy back with the dry signal.
+    This adds gritty harmonic character without the voice becoming unrecognisable.
+    dry_mix + sat_mix do not need to sum to 1 — sat_mix is additive presence."""
+    drive = params.sat_drive
+    mix   = params.sat_mix
+    if mix < 0.01 or drive < 1.01:
         return audio
-    result = (np.tanh(audio * drive) / np.tanh(drive)).astype(np.float32)
+    driven   = (np.tanh(audio * drive) / np.tanh(min(drive, 20.0))).astype(np.float32)
+    result   = ((1.0 - mix) * audio + mix * driven).astype(np.float32)
     if verbose:
-        print(f"  [saturate]   drive={drive:.2f}")
+        print(f"  [saturate]   parallel drive={drive:.1f}  mix={mix:.0%}")
     return result
 
 
@@ -391,6 +441,9 @@ def humanize(audio: np.ndarray, sr: int, params: HumanizeParams,
     total_cents  = micro + vibrato
     amp_lfo_db   = _random_walk_lfo(n, sr, 0.2, params.amp_variation_db, rng)
 
+    if params.do_denoise:
+        audio = apply_denoise(audio, sr, params, verbose)
+
     if params.do_eq:
         audio = apply_eq(audio, sr, verbose)
 
@@ -421,8 +474,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("output", nargs="?", default=None,
                    help="Output WAV path (default: <stem>_humanized.wav)")
 
-    p.add_argument("--intensity",       type=float, default=0.3,
-                   help="Master effect depth 0.0–1.0 (default: 0.3)")
+    p.add_argument("--intensity",       type=float, default=0.5,
+                   help="Master effect depth 0.0–1.0 (default: 0.5)")
+    p.add_argument("--no-denoise",      action="store_true", help="Skip noise reduction")
     p.add_argument("--no-eq",           action="store_true", help="Skip EQ + cleanup")
     p.add_argument("--no-saturation",   action="store_true", help="Skip saturation")
     p.add_argument("--no-compression",  action="store_true", help="Skip compression")
@@ -457,6 +511,7 @@ def main() -> None:
     if args.amp_variation     is not None: params.amp_variation_db    = args.amp_variation
     if args.breath_level      is not None: params.breath_level_db     = args.breath_level
 
+    params.do_denoise     = not args.no_denoise
     params.do_eq          = not args.no_eq
     params.do_compression = not args.no_compression
     params.do_saturation  = not args.no_saturation
