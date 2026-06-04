@@ -6,8 +6,10 @@ Processing chain:
   1. Cleanup + EQ   (aggressive high-shelf cut, sibilance cut, metal vocal tonal shaping)
   2. Compression    (peak-follower: punch and presence)
   3. Saturation     (parallel soft-clip: dry + heavy-drive blend for gritty character)
+  3.5 Chorus        (pedalboard — modulated delay shimmer, adds natural movement)
   4. Pitch          (subtle micro-variations, 2s windows — no OLA chunk artifacts)
   5. Amplitude      (slow breath-support envelope)
+  5.5 Reverb        (pedalboard — light room character, removes dry/synthetic quality)
   6. Breath noise   (bandpass-filtered noise, voice-gated)
   7. Normalize      (−1 dBFS limiter)
 
@@ -19,6 +21,8 @@ Usage:
     --no-eq               skip EQ + cleanup
     --no-saturation       skip saturation
     --no-compression      skip compression
+    --no-chorus           skip chorus
+    --no-reverb           skip reverb
     --no-vibrato          skip vibrato
     --no-breath           skip breath noise
     --seed N              fixed random seed for reproducible output
@@ -133,6 +137,10 @@ class HumanizeParams:
     vibrato_jitter:      float = 0.3
     # Amplitude
     amp_variation_db:    float = 1.5
+    # Chorus
+    chorus_mix:          float = 0.165  # wet level (0–1)
+    # Reverb
+    reverb_wet:          float = 0.135  # wet level (0–1)
     # Breath
     breath_level_db:     float = -52.0
     # Feature flags
@@ -140,6 +148,8 @@ class HumanizeParams:
     do_eq:               bool = True
     do_compression:      bool = True
     do_saturation:       bool = True
+    do_chorus:           bool = True
+    do_reverb:           bool = True
     do_vibrato:          bool = True
     do_breath:           bool = True
 
@@ -153,6 +163,8 @@ def params_from_intensity(t: float) -> HumanizeParams:
     p.comp_threshold_db   = -12.0 + t * -14.0        # -12 → -26 dBFS
     p.comp_ratio          = 2.0 + t * 6.0             # 2:1 → 8:1
     p.comp_makeup_db      = t * 6.0                   # 0 → 6 dB
+    p.chorus_mix          = 0.08 + t * 0.17           # 0.08 → 0.25
+    p.reverb_wet          = 0.05 + t * 0.17           # 0.05 → 0.22
     p.micro_pitch_cents   = 1.0 + t * 9.0            # 1 → 10 cents
     p.vibrato_depth_cents = t * 15.0                  # 0 → 15 cents
     p.amp_variation_db    = 0.3 + t * 2.7             # 0.3 → 3.0 dB
@@ -295,6 +307,59 @@ def apply_saturation(audio: np.ndarray, params: HumanizeParams,
     result   = ((1.0 - mix) * audio + mix * driven).astype(np.float32)
     if verbose:
         print(f"  [saturate]   parallel drive={drive:.1f}  mix={mix:.0%}")
+    return result
+
+
+# ─── Stage 3.5: Chorus ───────────────────────────────────────────────────────
+
+def apply_chorus(audio: np.ndarray, sr: int, params: HumanizeParams,
+                 verbose: bool) -> np.ndarray:
+    if not HAS_PEDALBOARD:
+        if verbose:
+            print("  [chorus]     skipped (pedalboard not installed)")
+        return audio
+    board = pedalboard.Pedalboard([
+        pedalboard.Chorus(
+            rate_hz=4.5,
+            depth=0.015,
+            centre_delay_ms=7.0,
+            feedback=0.0,
+            mix=params.chorus_mix,
+        )
+    ])
+    mono = audio.ndim == 1
+    arr  = audio[np.newaxis, :] if mono else audio.T
+    out  = board(arr.astype(np.float32), sample_rate=sr)
+    result = out[0] if mono else out.T
+    if verbose:
+        print(f"  [chorus]     mix={params.chorus_mix:.0%}  rate=4.5 Hz  depth=1.5%")
+    return result
+
+
+# ─── Stage 5.5: Reverb ───────────────────────────────────────────────────────
+
+def apply_reverb(audio: np.ndarray, sr: int, params: HumanizeParams,
+                 verbose: bool) -> np.ndarray:
+    if not HAS_PEDALBOARD:
+        if verbose:
+            print("  [reverb]     skipped (pedalboard not installed)")
+        return audio
+    board = pedalboard.Pedalboard([
+        pedalboard.Reverb(
+            room_size=0.35,
+            damping=0.7,
+            wet_level=params.reverb_wet,
+            dry_level=1.0,
+            freeze_mode=0.0,
+            width=0.8,
+        )
+    ])
+    mono = audio.ndim == 1
+    arr  = audio[np.newaxis, :] if mono else audio.T
+    out  = board(arr.astype(np.float32), sample_rate=sr)
+    result = out[0] if mono else out.T
+    if verbose:
+        print(f"  [reverb]     wet={params.reverb_wet:.0%}  room=0.35  damping=0.7")
     return result
 
 
@@ -453,8 +518,14 @@ def humanize(audio: np.ndarray, sr: int, params: HumanizeParams,
     if params.do_saturation:
         audio = apply_saturation(audio, params, verbose)
 
+    if params.do_chorus:
+        audio = apply_chorus(audio, sr, params, verbose)
+
     audio = apply_pitch_variations(audio, sr, total_cents, verbose)
     audio = apply_amplitude_variation(audio, amp_lfo_db, verbose)
+
+    if params.do_reverb:
+        audio = apply_reverb(audio, sr, params, verbose)
 
     if params.do_breath:
         audio = apply_breath_noise(audio, sr, params, rng, verbose)
@@ -480,6 +551,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--no-eq",           action="store_true", help="Skip EQ + cleanup")
     p.add_argument("--no-saturation",   action="store_true", help="Skip saturation")
     p.add_argument("--no-compression",  action="store_true", help="Skip compression")
+    p.add_argument("--no-chorus",       action="store_true", help="Skip chorus")
+    p.add_argument("--no-reverb",       action="store_true", help="Skip reverb")
     p.add_argument("--no-vibrato",      action="store_true", help="Skip vibrato")
     p.add_argument("--no-breath",       action="store_true", help="Skip breath noise")
 
@@ -515,6 +588,8 @@ def main() -> None:
     params.do_eq          = not args.no_eq
     params.do_compression = not args.no_compression
     params.do_saturation  = not args.no_saturation
+    params.do_chorus      = not args.no_chorus
+    params.do_reverb      = not args.no_reverb
     params.do_vibrato     = not args.no_vibrato
     params.do_breath      = not args.no_breath
 
