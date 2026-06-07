@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
+}
+
+@keyframes gold-pulse {
+  0%, 100% {
+    opacity: 0.25;
+    filter: drop-shadow(0 0 3px #a8772e);
+  }
+  50% {
+    opacity: 0.65;
+    filter: drop-shadow(0 0 12px #e8b84b) drop-shadow(0 0 24px #c9a227);
+  }
+}
+
+@keyframes flicker {
+  0%, 93%, 100% {
+    opacity: 1;
+  }
+  94% {
+    opacity: 0.85;
+  }
+  95% {
+    opacity: 1;
+  }
+  96% {
+    opacity: 0.6;
+  }
+  97% {
+    opacity: 1;
+  }
+}
+
+@utility animate-gold-pulse {
+  animation: gold-pulse 4s ease-in-out infinite;
+}
+
+@utility animate-flicker {
+  animation: flicker 9s ease-in-out infinite;
+}
