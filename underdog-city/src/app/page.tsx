@@ -21,8 +21,10 @@ export default function Home() {
         </h1>
 
         <p className="mt-6 max-w-xl text-base text-(--color-muted-bone) sm:text-lg">
-          Every wound here has a price, and every price buys power. We all
-          rule down here.
+          We All Rule Down Here 👑
+          <br />
+          There&apos;s only one rule in Underdog City: Turn that shit up
+          loud.
         </p>
 
         <div className="mt-10">
@@ -30,23 +32,6 @@ export default function Home() {
         </div>
 
         <div className="crack-line absolute bottom-0 left-1/2 h-px w-2/3 -translate-x-1/2 opacity-60" />
-      </section>
-
-      {/* Lore Tease */}
-      <section className="border-t border-(--color-tarnished-gold)/20 px-6 py-24">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="font-display text-xs uppercase tracking-[0.3em] text-(--color-undercity-magenta)">
-            From The Underground
-          </p>
-          <p className="mt-6 font-display text-xl leading-relaxed text-(--color-bone) sm:text-2xl">
-            “They tell you healing leaves no mark. They&apos;re lying. Down
-            here, the mark is the point — gild the wound, and it shines
-            brighter than the skin ever did.”
-          </p>
-          <p className="mt-4 text-sm text-(--color-muted-bone)">
-            — fragment recovered from the Undercity broadcast
-          </p>
-        </div>
       </section>
 
       {/* First Transmission */}
