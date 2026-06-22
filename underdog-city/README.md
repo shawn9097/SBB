@@ -10,6 +10,11 @@ first-transmission/countdown section, a join CTA with socials, and a footer.
 Next.js (App Router) + Tailwind v4 + Framer Motion, deployable to Vercel
 independently of the Warmside app.
 
+## Deployment
+
+Deployed via Vercel (project `underdogcity`), Root Directory set to
+`underdog-city`.
+
 ## Setup
 
 ```sh
