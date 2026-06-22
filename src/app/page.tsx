@@ -7,7 +7,7 @@ export default function Home() {
           Warmside<span className="text-[#C8923A]">.</span>
         </span>
         <a
-          href="/signup"
+          href="/onboarding"
           className="bg-[#28394B] text-[#EFE6D0] px-5 py-2 rounded text-sm font-medium hover:bg-[#1A2530] transition-colors"
         >
           Start your 30 days
@@ -30,7 +30,7 @@ export default function Home() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            href="/signup"
+            href="/onboarding"
             className="bg-[#28394B] text-[#EFE6D0] px-8 py-4 rounded text-base font-medium hover:bg-[#1A2530] transition-colors"
           >
             Start your 30 days — $129/mo
@@ -133,7 +133,7 @@ export default function Home() {
                 ))}
               </ul>
               <a
-                href="/signup"
+                href="/onboarding"
                 className="block text-center bg-[#28394B] text-[#EFE6D0] px-6 py-3 rounded text-sm font-medium hover:bg-[#1A2530] transition-colors"
               >
                 {cta}
