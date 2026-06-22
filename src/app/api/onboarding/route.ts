@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { buildVoiceDNA } from "@/lib/claude";
 import {
   generateInboundAddress,
@@ -12,7 +13,6 @@ interface OnboardingBody {
   first_name?: string;
   last_name?: string;
   company_name?: string;
-  email?: string;
   phone?: string;
   trade_niche?: string;
   trade_value_1?: string;
@@ -32,6 +32,16 @@ const PG_UNIQUE_VIOLATION = "23505";
 // Creates a contractor from the onboarding form: validates input, builds the Voice DNA
 // profile from their writing samples, provisions a unique BCC address, and persists the record.
 export async function POST(req: NextRequest) {
+  // Identity comes from the authenticated session, never the request body.
+  const auth = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await auth.auth.getUser();
+
+  if (!user?.email) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
   let body: OnboardingBody;
   try {
     body = (await req.json()) as OnboardingBody;
@@ -42,7 +52,7 @@ export async function POST(req: NextRequest) {
   const first_name = clean(body.first_name);
   const last_name = clean(body.last_name);
   const company_name = clean(body.company_name);
-  const email = clean(body.email).toLowerCase();
+  const email = user.email.toLowerCase();
   const phone = clean(body.phone);
   const trade_niche = clean(body.trade_niche);
   const trade_value_1 = clean(body.trade_value_1);
@@ -52,7 +62,6 @@ export async function POST(req: NextRequest) {
     first_name,
     last_name,
     company_name,
-    email,
     phone,
   })
     .filter(([, v]) => !v)
@@ -65,26 +74,22 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
-  }
-
   if (!isTradeNiche(trade_niche)) {
     return NextResponse.json({ error: "Invalid trade niche" }, { status: 400 });
   }
 
   const db = supabaseAdmin();
 
-  // Don't let the same email onboard twice.
+  // One contractor per authenticated user.
   const { data: existing } = await db
     .from("contractors")
     .select("id")
-    .eq("email", email)
+    .or(`user_id.eq.${user.id},email.eq.${email}`)
     .maybeSingle();
 
   if (existing) {
     return NextResponse.json(
-      { error: "An account already exists for this email" },
+      { error: "An account already exists for this user" },
       { status: 409 }
     );
   }
@@ -108,6 +113,7 @@ export async function POST(req: NextRequest) {
   }
 
   const contractorBase = {
+    user_id: user.id,
     first_name,
     last_name,
     company_name,

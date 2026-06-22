@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 const NICHES = [
   { value: "roofing", label: "Roofing" },
@@ -22,9 +24,16 @@ interface SuccessState {
 }
 
 export default function Onboarding() {
+  const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<SuccessState | null>(null);
+
+  async function handleSignOut() {
+    await createSupabaseBrowserClient().auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -86,9 +95,18 @@ export default function Onboarding() {
   return (
     <main className="min-h-screen bg-[#EFE6D0] text-[#0F1417] px-6 py-16">
       <div className="max-w-xl mx-auto">
-        <p className="font-mono text-xs tracking-widest uppercase text-[#6B7178] mb-4">
-          Onboarding · Voice Twin
-        </p>
+        <div className="flex justify-between items-center mb-4">
+          <p className="font-mono text-xs tracking-widest uppercase text-[#6B7178]">
+            Onboarding · Voice Twin
+          </p>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="font-mono text-xs text-[#6B7178] hover:text-[#A57628] underline"
+          >
+            Sign out
+          </button>
+        </div>
         <h1 className="font-serif text-4xl font-semibold mb-3 tracking-tight">
           Let&apos;s teach Warmside your voice<span className="text-[#C8923A]">.</span>
         </h1>
@@ -117,16 +135,10 @@ export default function Onboarding() {
               <label className={LABEL}>Company name</label>
               <input name="company_name" required className={FIELD} />
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className={LABEL}>Email</label>
-                <input name="email" type="email" required className={FIELD} />
-              </div>
-              <div>
-                <label className={LABEL}>Mobile phone</label>
-                <p className={HINT}>Where we forward prospect replies.</p>
-                <input name="phone" type="tel" required className={FIELD} />
-              </div>
+            <div>
+              <label className={LABEL}>Mobile phone</label>
+              <p className={HINT}>Where we forward prospect replies.</p>
+              <input name="phone" type="tel" required className={FIELD} />
             </div>
             <div>
               <label className={LABEL}>Trade</label>

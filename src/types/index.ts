@@ -18,6 +18,7 @@ export type TouchChannel = "sms" | "email";
 
 export interface Contractor {
   id: string;
+  user_id: string | null;
   email: string;
   first_name: string;
   last_name: string;
