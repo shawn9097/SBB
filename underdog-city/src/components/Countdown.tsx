@@ -40,7 +40,7 @@ export default function Countdown({ targetDate }: { targetDate?: string }) {
   ];
 
   return (
-    <div className="flex gap-6">
+    <div role="timer" aria-label="Countdown to launch" className="flex gap-6">
       {units.map(([label, value]) => (
         <div key={label} className="flex flex-col items-center">
           <span className="font-display text-3xl text-(--color-gild-glow)">

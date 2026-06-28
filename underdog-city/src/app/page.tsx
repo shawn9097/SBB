@@ -13,7 +13,7 @@ export default function Home() {
         <section className="relative flex min-h-[90vh] flex-col items-center justify-center px-6 text-center">
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(168,119,46,0.12),transparent_60%)]"
+            className="gild-glow pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(168,119,46,0.12),transparent_60%)]"
           />
           <div className="crack-line absolute left-1/2 top-0 h-px w-2/3 -translate-x-1/2 opacity-60" />
 

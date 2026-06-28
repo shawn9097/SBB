@@ -32,7 +32,7 @@ export default function MusicPage() {
             <li
               key={t.index}
               className={`flex items-center gap-5 bg-(--color-charcoal) px-5 py-5 ${
-                t.status === "locked" ? "opacity-45" : ""
+                t.status === "locked" ? "opacity-60" : ""
               }`}
             >
               <span className="font-display text-lg text-(--color-tarnished-gold)">
