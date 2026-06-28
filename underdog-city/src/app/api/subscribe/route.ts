@@ -57,8 +57,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Beehiiv expects the publication id prefixed with "pub_"; tolerate a bare UUID.
+  const publicationId = BEEHIIV_PUBLICATION_ID.startsWith("pub_")
+    ? BEEHIIV_PUBLICATION_ID
+    : `pub_${BEEHIIV_PUBLICATION_ID}`;
+
   const res = await fetch(
-    `https://api.beehiiv.com/v2/publications/${BEEHIIV_PUBLICATION_ID}/subscriptions`,
+    `https://api.beehiiv.com/v2/publications/${publicationId}/subscriptions`,
     {
       method: "POST",
       headers: {
