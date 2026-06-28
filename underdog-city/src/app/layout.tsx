@@ -14,7 +14,8 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://underdogcity.com";
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://theunderdogcity.com";
 const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
 
 const title = "Underdog City — Now Accepting Tenants";

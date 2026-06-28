@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { chapters } from "@/content/novel";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://underdogcity.com";
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://theunderdogcity.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
