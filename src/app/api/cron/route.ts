@@ -10,8 +10,14 @@ import type { Campaign, Contractor, Prospect, TradeNiche } from "@/types";
 // It finds all ACTIVE campaigns with next_touch_at <= now, sends the next touch,
 // and schedules the following one.
 export async function GET(req: NextRequest) {
-  const secret = req.headers.get("x-cron-secret");
-  if (secret !== process.env.CRON_SECRET) {
+  // Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`; also accept
+  // `x-cron-secret` for manual invocation during testing.
+  const cronSecret = process.env.CRON_SECRET;
+  const authorized =
+    Boolean(cronSecret) &&
+    (req.headers.get("authorization") === `Bearer ${cronSecret}` ||
+      req.headers.get("x-cron-secret") === cronSecret);
+  if (!authorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
