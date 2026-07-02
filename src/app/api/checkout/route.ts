@@ -44,9 +44,16 @@ export async function POST(req: NextRequest) {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
+  // Guard against a tier whose Stripe price isn't configured (e.g. Volume before
+  // its product exists) — otherwise Stripe would receive an undefined price.
+  const priceId = priceIdForTier(tier);
+  if (!priceId) {
+    return NextResponse.json({ error: "That plan isn't available yet" }, { status: 400 });
+  }
+
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
-    line_items: [{ price: priceIdForTier(tier), quantity: 1 }],
+    line_items: [{ price: priceId, quantity: 1 }],
     client_reference_id: contractor.id,
     // Reuse an existing customer if we've seen them before; otherwise let
     // Checkout create one keyed to their email.

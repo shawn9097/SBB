@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+// Only Standard is offered for now. Add the Volume entry back here once its
+// Stripe product exists and STRIPE_VOLUME_PRICE_ID is set.
 const PLANS = [
   {
     tier: "standard" as const,
@@ -16,19 +18,9 @@ const PLANS = [
       "ROI dashboard",
     ],
   },
-  {
-    tier: "volume" as const,
-    name: "Volume",
-    price: "$249",
-    limit: "Unlimited estimates",
-    features: [
-      "Everything in Standard",
-      "Unlimited estimates",
-      "Quarterly performance calls",
-      "Priority support",
-    ],
-  },
 ];
+
+const SINGLE_PLAN = PLANS.length === 1;
 
 export default function PlanPicker() {
   const [loading, setLoading] = useState<string | null>(null);
@@ -58,7 +50,13 @@ export default function PlanPicker() {
 
   return (
     <div>
-      <div className="grid sm:grid-cols-2 gap-6">
+      <div
+        className={
+          SINGLE_PLAN
+            ? "max-w-sm mx-auto"
+            : "grid sm:grid-cols-2 gap-6"
+        }
+      >
         {PLANS.map((plan) => (
           <div
             key={plan.tier}
