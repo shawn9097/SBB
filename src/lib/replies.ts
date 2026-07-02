@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { classifyReplyIntent, type ReplyIntent } from "@/lib/claude";
 import { forwardReplyToContractor, sendSMS } from "@/lib/twilio";
-import { forwardReplyEmailToContractor, sendEmail } from "@/lib/resend";
+import { forwardReplyEmailToContractor, sendEmail, emailFromDomain } from "@/lib/resend";
 import type { CampaignStatus, TouchChannel } from "@/types";
 
 const STATUS_MAP: Record<ReplyIntent, CampaignStatus> = {
@@ -119,7 +119,7 @@ export async function handleProspectReply({
       } else if (channel === "email" && prospect.email) {
         await sendEmail({
           to: prospect.email,
-          from: `${contractor.first_name} ${contractor.last_name} <noreply@${process.env.INBOUND_EMAIL_DOMAIN}>`,
+          from: `${contractor.first_name} ${contractor.last_name} <noreply@${emailFromDomain()}>`,
           subject: "Thanks for the note",
           text: autoReply,
         });

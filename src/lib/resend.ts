@@ -2,6 +2,14 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
+// The domain we send email FROM (verified in Resend, e.g. warmside.app). This is
+// deliberately separate from INBOUND_EMAIL_DOMAIN — inbound/BCC addresses live on a
+// subdomain whose MX points at Postmark, so the root stays free for a normal inbox.
+// Falls back to INBOUND_EMAIL_DOMAIN when they're the same domain.
+export function emailFromDomain(): string {
+  return process.env.EMAIL_FROM_DOMAIN || process.env.INBOUND_EMAIL_DOMAIN || "";
+}
+
 export async function sendEmail({
   to,
   from,
@@ -40,7 +48,7 @@ export async function forwardReplyEmailToContractor({
     ? `${estimateSubject ?? "Estimate"} · $${estimateAmount.toLocaleString()}`
     : estimateSubject ?? "Estimate";
 
-  const from = `Warmside <noreply@${process.env.INBOUND_EMAIL_DOMAIN}>`;
+  const from = `Warmside <noreply@${emailFromDomain()}>`;
   const text = `${prospectName} replied to your follow-up.
 
 ${amountLine}

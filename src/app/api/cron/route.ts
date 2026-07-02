@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { SEQUENCES, applyVariables } from "@/lib/sequences";
 import { applyVoiceTwin } from "@/lib/claude";
 import { sendSMS } from "@/lib/twilio";
-import { sendEmail } from "@/lib/resend";
+import { sendEmail, emailFromDomain } from "@/lib/resend";
 import type { Campaign, Contractor, Prospect, TradeNiche } from "@/types";
 
 // This endpoint is called by Vercel Cron (configured in vercel.json) once per day.
@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
       } else if (touch.channel === "email" && prospect.email) {
         await sendEmail({
           to: prospect.email,
-          from: `${contractor.first_name} ${contractor.last_name} <noreply@${process.env.INBOUND_EMAIL_DOMAIN}>`,
+          from: `${contractor.first_name} ${contractor.last_name} <noreply@${emailFromDomain()}>`,
           subject: subject ?? "Following up",
           text: body,
           // Replies route to the contractor's inbound address, where the
