@@ -110,6 +110,9 @@ export interface PostmarkInboundPayload {
   ToFull: Array<{ Email: string; Name: string }>;
   Cc: string;
   CcFull: Array<{ Email: string; Name: string }>;
+  Bcc?: string;
+  BccFull?: Array<{ Email: string; Name: string }>;
+  OriginalRecipient?: string; // envelope recipient — how a BCC'd inbound address arrives
   Subject: string;
   TextBody: string;
   HtmlBody: string;

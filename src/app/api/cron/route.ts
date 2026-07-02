@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
   }
 
   let sent = 0;
+  let skipped = 0;
   let completed = 0;
 
   for (const campaign of dueCampaigns ?? []) {
@@ -76,10 +77,16 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Send the touch
+    // Send the touch. A skipped touch (e.g. SMS with no phone on file) still
+    // advances the schedule but is never logged as sent.
+    let delivered = false;
     try {
       if (touch.channel === "sms" && prospect.phone) {
-        await sendSMS(prospect.phone, body);
+        // TCPA: the first text a prospect ever gets must carry opt-out language
+        const smsBody =
+          touch.index === 0 ? `${body}\nReply STOP to opt out.` : body;
+        await sendSMS(prospect.phone, smsBody);
+        delivered = true;
       } else if (touch.channel === "email" && prospect.email) {
         await sendEmail({
           to: prospect.email,
@@ -87,19 +94,22 @@ export async function GET(req: NextRequest) {
           subject: subject ?? "Following up",
           text: body,
         });
+        delivered = true;
       }
 
-      // Log the touchpoint
-      await db.from("touchpoints").insert({
-        campaign_id: campaign.id,
-        touch_index: touch.index,
-        channel: touch.channel,
-        subject: subject ?? null,
-        body,
-        sent_at: new Date().toISOString(),
-      });
-
-      sent++;
+      if (delivered) {
+        await db.from("touchpoints").insert({
+          campaign_id: campaign.id,
+          touch_index: touch.index,
+          channel: touch.channel,
+          subject: subject ?? null,
+          body,
+          sent_at: new Date().toISOString(),
+        });
+        sent++;
+      } else {
+        skipped++;
+      }
     } catch (e) {
       console.error(`Failed to send touch for campaign ${campaign.id}:`, e);
       continue;
@@ -129,5 +139,5 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, sent, completed });
+  return NextResponse.json({ ok: true, sent, skipped, completed });
 }

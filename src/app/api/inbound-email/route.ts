@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { detectNicheFromText } from "@/lib/sequences";
-import { detectNicheWithAI } from "@/lib/claude";
+import { detectNicheWithAI, extractProspectInfo } from "@/lib/claude";
+import { normalizePhone } from "@/lib/phone";
+import type { ExtractedProspectInfo } from "@/lib/claude";
 import type { PostmarkInboundPayload, TradeNiche } from "@/types";
 
-// Postmark fires this webhook when a BCC'd estimate email arrives.
-// The "To" address is the contractor's unique inbound address, e.g. abc123@warmside.app
+// Postmark fires this webhook when a contractor BCCs their unique Warmside
+// address on an estimate email. Party roles in that message:
+//   From              = the contractor (they sent the estimate)
+//   To                = the prospect (the homeowner receiving the estimate)
+//   envelope recipient = the Warmside inbound address (BCC'd, so usually
+//                        absent from the headers — Postmark surfaces it as
+//                        OriginalRecipient)
 export async function POST(req: NextRequest) {
   const token = req.headers.get("x-postmark-token");
   if (token !== process.env.POSTMARK_WEBHOOK_TOKEN) {
@@ -15,27 +22,88 @@ export async function POST(req: NextRequest) {
   const payload: PostmarkInboundPayload = await req.json();
   const db = supabaseAdmin();
 
-  // Identify which contractor this inbound address belongs to
-  const inboundAddress = payload.ToFull[0]?.Email?.toLowerCase();
+  // Candidate inbound addresses: envelope recipient first (the BCC case),
+  // then any header recipients (covers To/Cc'd inbound addresses too).
+  const headerRecipients = [
+    ...(payload.ToFull ?? []),
+    ...(payload.CcFull ?? []),
+    ...(payload.BccFull ?? []),
+  ]
+    .map((r) => ({ email: r.Email?.toLowerCase() ?? "", name: r.Name ?? "" }))
+    .filter((r) => r.email);
+
+  const candidateAddresses = [
+    payload.OriginalRecipient?.toLowerCase(),
+    ...headerRecipients.map((r) => r.email),
+  ].filter((e): e is string => Boolean(e));
+
+  if (!candidateAddresses.length) {
+    return NextResponse.json({ error: "No recipients in payload" }, { status: 422 });
+  }
+
   const { data: contractor } = await db
     .from("contractors")
     .select("*")
-    .eq("inbound_email_address", inboundAddress)
-    .single();
+    .in("inbound_email_address", candidateAddresses)
+    .maybeSingle();
 
   if (!contractor) {
-    return NextResponse.json({ error: "Contractor not found for inbound address" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Contractor not found for inbound address" },
+      { status: 404 }
+    );
   }
 
-  // Extract prospect info from the email headers (the original recipient = prospect)
-  const prospectEmail = payload.From?.toLowerCase();
-  const prospectName = payload.FromFull?.Name || prospectEmail.split("@")[0];
+  // Only the contractor's own registered email may start campaigns — otherwise
+  // anyone who learns the BCC address could trigger messages to arbitrary people.
+  const senderEmail = (payload.FromFull?.Email || payload.From || "").toLowerCase().trim();
+  if (senderEmail !== contractor.email.toLowerCase()) {
+    return NextResponse.json(
+      { error: "Sender does not match the registered contractor email" },
+      { status: 403 }
+    );
+  }
+
+  // The prospect is the recipient who isn't us and isn't the contractor.
+  const inboundAddress = contractor.inbound_email_address.toLowerCase();
+  const prospectRecipient = headerRecipients.find(
+    (r) => r.email !== inboundAddress && r.email !== senderEmail
+  );
+
+  if (!prospectRecipient) {
+    return NextResponse.json(
+      { error: "No prospect recipient found — estimate must be addressed to the homeowner" },
+      { status: 422 }
+    );
+  }
+
+  const prospectEmail = prospectRecipient.email;
   const subject = payload.Subject || "";
   const body = payload.TextBody || "";
 
+  // Pull the prospect's phone / name / amount / scope out of the estimate body.
+  // Best-effort: a failed extraction still creates an email-only campaign.
+  let extracted: ExtractedProspectInfo = {
+    first_name: null,
+    phone: null,
+    estimate_amount: null,
+    scope_summary: null,
+  };
+  try {
+    extracted = await extractProspectInfo(subject, body);
+  } catch (e) {
+    console.error("Prospect info extraction failed:", e);
+  }
+
+  const prospectFirstName =
+    prospectRecipient.name.split(" ")[0] ||
+    extracted.first_name ||
+    prospectEmail.split("@")[0];
+  const prospectPhone = normalizePhone(extracted.phone);
+
   // Detect trade niche
   let niche: TradeNiche;
-  const heuristic = detectNicheFromText(subject, body, null);
+  const heuristic = detectNicheFromText(subject, body, extracted.estimate_amount);
   if (heuristic.confidence >= 0.8) {
     niche = heuristic.niche;
   } else {
@@ -50,17 +118,23 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Upsert prospect (don't create duplicates for same email + contractor)
+  // Upsert prospect (don't create duplicates for same email + contractor).
+  // Extracted fields are only included when present so a re-sent estimate
+  // never clobbers data we already have with nulls.
   const { data: prospect, error: prospectError } = await db
     .from("prospects")
     .upsert(
       {
         contractor_id: contractor.id,
-        first_name: prospectName.split(" ")[0],
+        first_name: prospectFirstName,
         email: prospectEmail,
         trade_niche: niche,
         estimate_subject: subject,
-        consent_confirmed: false, // requires explicit confirmation from contractor
+        ...(prospectPhone ? { phone: prospectPhone } : {}),
+        ...(extracted.estimate_amount != null
+          ? { estimate_amount: extracted.estimate_amount }
+          : {}),
+        ...(extracted.scope_summary ? { scope_summary: extracted.scope_summary } : {}),
       },
       { onConflict: "contractor_id,email", ignoreDuplicates: false }
     )
@@ -70,6 +144,20 @@ export async function POST(req: NextRequest) {
   if (prospectError || !prospect) {
     console.error("Failed to upsert prospect:", prospectError);
     return NextResponse.json({ error: "Failed to create prospect" }, { status: 500 });
+  }
+
+  // Idempotency: Postmark retries and re-sent estimates must not spawn a
+  // second live campaign for the same prospect.
+  const { data: liveCampaign } = await db
+    .from("campaigns")
+    .select("id")
+    .eq("prospect_id", prospect.id)
+    .in("status", ["ACTIVE", "ENGAGED", "QUESTION_NEEDED"])
+    .limit(1)
+    .maybeSingle();
+
+  if (liveCampaign) {
+    return NextResponse.json({ ok: true, deduped: true, prospectEmail, niche });
   }
 
   // Create campaign — starts at touch 0, first touches go out today
@@ -88,5 +176,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to create campaign" }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, prospectEmail, niche });
+  return NextResponse.json({
+    ok: true,
+    prospectEmail,
+    niche,
+    phoneCaptured: Boolean(prospectPhone),
+  });
 }

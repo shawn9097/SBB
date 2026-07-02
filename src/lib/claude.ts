@@ -115,6 +115,56 @@ Return ONLY valid JSON: {"niche": "<one of the niche values>", "confidence": <0.
   return { niche: parsed.niche as TradeNiche, confidence: parsed.confidence };
 }
 
+// ─── Prospect info extraction from an estimate email ─────────────────────────
+export interface ExtractedProspectInfo {
+  first_name: string | null;
+  phone: string | null;
+  estimate_amount: number | null;
+  scope_summary: string | null;
+}
+
+export async function extractProspectInfo(
+  subject: string,
+  body: string
+): Promise<ExtractedProspectInfo> {
+  const prompt = `This is an estimate email a contractor sent to a homeowner (the prospect). Extract the HOMEOWNER's details if present.
+
+Subject: ${subject}
+Body:
+${body.slice(0, 3000)}
+
+Return ONLY valid JSON:
+{"first_name": string or null, "phone": string or null, "estimate_amount": number or null, "scope_summary": string or null}
+
+Rules:
+- first_name: the homeowner's first name (often after "Hi" / "Dear" or in a "Prepared for:" block)
+- phone: the HOMEOWNER's phone number only. Contractor signatures usually contain the CONTRACTOR's phone — never use that. If you can't tell whose number it is, return null.
+- estimate_amount: the total estimate in dollars, as a plain number
+- scope_summary: one short phrase describing the work, e.g. "the roof replacement"`;
+
+  const message = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 256,
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  const text = message.content[0].type === "text" ? message.content[0].text : "";
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    return { first_name: null, phone: null, estimate_amount: null, scope_summary: null };
+  }
+
+  const parsed = JSON.parse(jsonMatch[0]) as Partial<ExtractedProspectInfo>;
+  return {
+    first_name: typeof parsed.first_name === "string" ? parsed.first_name : null,
+    phone: typeof parsed.phone === "string" ? parsed.phone : null,
+    estimate_amount:
+      typeof parsed.estimate_amount === "number" ? parsed.estimate_amount : null,
+    scope_summary:
+      typeof parsed.scope_summary === "string" ? parsed.scope_summary : null,
+  };
+}
+
 // ─── Reply intent classification ─────────────────────────────────────────────
 export type ReplyIntent =
   | "interested"
