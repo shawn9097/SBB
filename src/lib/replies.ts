@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { classifyReplyIntent, type ReplyIntent } from "@/lib/claude";
-import { forwardReplyToContractor, sendSMS } from "@/lib/twilio";
+import { forwardReplyToContractor, sendSMS, isTwilioConfigured } from "@/lib/twilio";
 import { forwardReplyEmailToContractor, sendEmail, emailFromDomain } from "@/lib/resend";
 import type { CampaignStatus, TouchChannel } from "@/types";
 
@@ -89,7 +89,7 @@ export async function handleProspectReply({
   }
 
   // Secondary forward: SMS to the contractor's phone (best-effort; live post-A2P).
-  if (contractor.phone && channel === "sms" && prospect.phone) {
+  if (isTwilioConfigured() && contractor.phone && channel === "sms" && prospect.phone) {
     try {
       await forwardReplyToContractor({
         contractorPhone: contractor.phone,
@@ -114,7 +114,7 @@ export async function handleProspectReply({
 
   if (autoReply) {
     try {
-      if (channel === "sms" && prospect.phone) {
+      if (channel === "sms" && prospect.phone && isTwilioConfigured()) {
         await sendSMS(prospect.phone, autoReply);
       } else if (channel === "email" && prospect.email) {
         await sendEmail({

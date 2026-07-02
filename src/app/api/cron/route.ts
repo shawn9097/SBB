@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { SEQUENCES, applyVariables } from "@/lib/sequences";
 import { applyVoiceTwin } from "@/lib/claude";
-import { sendSMS } from "@/lib/twilio";
+import { sendSMS, isTwilioConfigured } from "@/lib/twilio";
 import { sendEmail, emailFromDomain } from "@/lib/resend";
 import type { Campaign, Contractor, Prospect, TradeNiche } from "@/types";
 
@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
     // advances the schedule but is never logged as sent.
     let delivered = false;
     try {
-      if (touch.channel === "sms" && prospect.phone) {
+      if (touch.channel === "sms" && prospect.phone && isTwilioConfigured()) {
         // TCPA: the first text a prospect ever gets must carry opt-out language
         const smsBody =
           touch.index === 0 ? `${body}\nReply STOP to opt out.` : body;
