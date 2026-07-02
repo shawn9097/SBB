@@ -57,8 +57,13 @@ async function handleInboundReply(
 //                        absent from the headers — Postmark surfaces it as
 //                        OriginalRecipient)
 export async function POST(req: NextRequest) {
-  const token = req.headers.get("x-postmark-token");
-  if (token !== process.env.POSTMARK_WEBHOOK_TOKEN) {
+  // Postmark can't send arbitrary custom headers, but it preserves the webhook
+  // URL's query string — so the shared secret rides in ?token=. The header is
+  // kept as a fallback for local testing.
+  const secret = process.env.POSTMARK_WEBHOOK_TOKEN;
+  const token =
+    req.nextUrl.searchParams.get("token") ?? req.headers.get("x-postmark-token");
+  if (!secret || token !== secret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
