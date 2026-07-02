@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import PlanPicker from "@/components/PlanPicker";
 
 const NICHES = [
   { value: "roofing", label: "Roofing" },
@@ -67,8 +68,8 @@ export default function Onboarding() {
 
   if (success) {
     return (
-      <main className="min-h-screen bg-[#EFE6D0] text-[#0F1417] flex items-center justify-center px-6 py-16">
-        <div className="max-w-lg w-full text-center">
+      <main className="min-h-screen bg-[#EFE6D0] text-[#0F1417] px-6 py-16">
+        <div className="max-w-lg w-full mx-auto text-center">
           <p className="font-mono text-xs tracking-widest uppercase text-[#6B7178] mb-4">
             You&apos;re set up
           </p>
@@ -82,11 +83,26 @@ export default function Onboarding() {
           <div className="bg-[#28394B] text-[#EFE6D0] rounded-lg px-6 py-5 font-mono text-lg break-all mb-6">
             {success.inbound_email_address}
           </div>
-          <p className="text-sm text-[#6B7178]">
+          <p className="text-sm text-[#6B7178] mb-12">
             {success.voice_twin_ready
               ? "✓ Voice Twin trained — your follow-ups will sound like you wrote them."
               : "Voice Twin not trained yet — follow-ups will use our proven templates until you add writing samples."}
           </p>
+
+          <h2 className="font-serif text-2xl font-semibold mb-2 tracking-tight">
+            Activate your plan
+          </h2>
+          <p className="text-sm text-[#3A4148] mb-6">
+            Pick a plan to turn your follow-ups on. Cancel anytime · 30-day guarantee.
+          </p>
+          <PlanPicker />
+
+          <a
+            href="/dashboard"
+            className="inline-block mt-8 text-sm text-[#6B7178] hover:text-[#A57628] underline"
+          >
+            Skip for now — go to dashboard
+          </a>
         </div>
       </main>
     );

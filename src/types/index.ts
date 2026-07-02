@@ -12,7 +12,8 @@ export type CampaignStatus =
   | "QUESTION_NEEDED"
   | "PARKED"
   | "LOST"
-  | "DO_NOT_CONTACT";
+  | "DO_NOT_CONTACT"
+  | "WON";
 
 export type TouchChannel = "sms" | "email";
 

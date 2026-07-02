@@ -7,6 +7,20 @@ const client = twilio(
 
 const FROM = process.env.TWILIO_PHONE_NUMBER!;
 
+// Verify an inbound Twilio webhook actually came from Twilio. Without this, anyone
+// can POST a fake "reply" to flip a campaign's status. Set TWILIO_SKIP_VALIDATION=true
+// only for local testing where you can't reproduce Twilio's signature.
+export function validateTwilioRequest(
+  signature: string | null,
+  url: string,
+  params: Record<string, string>
+): boolean {
+  if (process.env.TWILIO_SKIP_VALIDATION === "true") return true;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  if (!authToken || !signature) return false;
+  return twilio.validateRequest(authToken, signature, url, params);
+}
+
 export async function sendSMS(to: string, body: string) {
   return client.messages.create({ from: FROM, to, body });
 }

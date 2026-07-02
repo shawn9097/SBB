@@ -93,6 +93,9 @@ export async function GET(req: NextRequest) {
           from: `${contractor.first_name} ${contractor.last_name} <noreply@${process.env.INBOUND_EMAIL_DOMAIN}>`,
           subject: subject ?? "Following up",
           text: body,
+          // Replies route to the contractor's inbound address, where the
+          // inbound-email webhook stops the sequence and forwards the reply.
+          replyTo: contractor.inbound_email_address,
         });
         delivered = true;
       }

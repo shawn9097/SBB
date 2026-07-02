@@ -1,10 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/lib/supabase";
 import { detectNicheFromText } from "@/lib/sequences";
 import { detectNicheWithAI, extractProspectInfo } from "@/lib/claude";
 import { normalizePhone } from "@/lib/phone";
+import { handleProspectReply } from "@/lib/replies";
 import type { ExtractedProspectInfo } from "@/lib/claude";
-import type { PostmarkInboundPayload, TradeNiche } from "@/types";
+import type { Contractor, PostmarkInboundPayload, TradeNiche } from "@/types";
+
+// A message to the inbound address from someone who isn't the contractor is a
+// prospect answering a follow-up email. Find their live campaign and stop it.
+async function handleInboundReply(
+  db: SupabaseClient,
+  contractor: Contractor,
+  senderEmail: string,
+  replyBody: string
+): Promise<NextResponse> {
+  const { data: prospect } = await db
+    .from("prospects")
+    .select("*, campaigns(*)")
+    .eq("contractor_id", contractor.id)
+    .eq("email", senderEmail)
+    .maybeSingle();
+
+  if (!prospect) {
+    return NextResponse.json(
+      { error: "Sender is neither the contractor nor a known prospect" },
+      { status: 403 }
+    );
+  }
+
+  const campaign = (prospect.campaigns ?? []).find(
+    (c: { status: string }) => c.status === "ACTIVE" || c.status === "QUESTION_NEEDED"
+  );
+  if (!campaign) {
+    return NextResponse.json({ ok: true, note: "No live campaign to update" });
+  }
+
+  const { intent } = await handleProspectReply({
+    db,
+    contractor,
+    prospect,
+    campaignId: campaign.id,
+    replyBody,
+    channel: "email",
+  });
+
+  return NextResponse.json({ ok: true, reply: true, intent });
+}
 
 // Postmark fires this webhook when a contractor BCCs their unique Warmside
 // address on an estimate email. Party roles in that message:
@@ -54,13 +97,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Only the contractor's own registered email may start campaigns — otherwise
-  // anyone who learns the BCC address could trigger messages to arbitrary people.
   const senderEmail = (payload.FromFull?.Email || payload.From || "").toLowerCase().trim();
+
+  // The inbound address does double duty: the contractor BCCs it to start a
+  // campaign, and prospects reach it via Reply-To when they answer a follow-up.
+  // A message from anyone other than the contractor is treated as a prospect
+  // reply — and if it isn't from a known prospect either, it's rejected so a
+  // stranger who learns the address can't trigger anything.
   if (senderEmail !== contractor.email.toLowerCase()) {
-    return NextResponse.json(
-      { error: "Sender does not match the registered contractor email" },
-      { status: 403 }
+    return handleInboundReply(
+      db,
+      contractor,
+      senderEmail,
+      payload.TextBody || payload.Subject || ""
     );
   }
 
