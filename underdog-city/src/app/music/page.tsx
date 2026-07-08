@@ -27,7 +27,7 @@ export default function MusicPage() {
           ))}
         </div>
 
-        <ul className="mt-12 space-y-px overflow-hidden rounded-sm border border-(--color-tarnished-gold)/20 font-mono text-sm">
+        <ul className="mt-12 space-y-px overflow-hidden rounded-sm border border-(--color-tarnished-gold)/20 font-mono text-xs sm:text-sm">
           {transmissions.map((t) => (
             <li
               key={t.index}
@@ -37,8 +37,26 @@ export default function MusicPage() {
                 <span className="text-(--color-tarnished-gold)">
                   {t.index}_
                 </span>
-                <span aria-hidden className="text-(--color-muted-bone)/40">
-                  {t.redact}
+                <span aria-hidden>
+                  {Array.from(t.name).map((ch, i) =>
+                    ch === "█" ? (
+                      <span key={i} className="text-(--color-muted-bone)/35">
+                        {ch}
+                      </span>
+                    ) : ch === "_" ? (
+                      <span key={i} className="text-(--color-muted-bone)/50">
+                        _
+                      </span>
+                    ) : (
+                      <span
+                        key={i}
+                        className="text-(--color-gild-glow)"
+                        style={{ textShadow: "0 0 8px rgba(232,184,75,0.55)" }}
+                      >
+                        {ch}
+                      </span>
+                    )
+                  )}
                 </span>
                 <span className="text-(--color-muted-bone)">.{t.ext}</span>
                 <span className="sr-only">
