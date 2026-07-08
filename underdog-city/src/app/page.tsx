@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import EmailCapture from "@/components/EmailCapture";
 import Countdown from "@/components/Countdown";
 import Nav from "@/components/Nav";
@@ -16,6 +17,20 @@ export default function Home() {
             className="gild-glow pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(168,119,46,0.12),transparent_60%)]"
           />
           <div className="crack-line absolute left-1/2 top-0 h-px w-2/3 -translate-x-1/2 opacity-60" />
+
+          <Image
+            src="/hero-mask.webp"
+            alt="The masked king of Underdog City"
+            width={320}
+            height={320}
+            priority
+            className="mb-8 w-[220px] sm:w-[300px]"
+            style={{
+              WebkitMaskImage:
+                "radial-gradient(circle, black 55%, transparent 100%)",
+              maskImage: "radial-gradient(circle, black 55%, transparent 100%)",
+            }}
+          />
 
           <p className="font-display text-xs uppercase tracking-[0.3em] text-(--color-tarnished-gold)">
             Now Accepting Tenants
