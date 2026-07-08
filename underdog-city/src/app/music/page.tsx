@@ -31,31 +31,20 @@ export default function MusicPage() {
           {transmissions.map((t) => (
             <li
               key={t.index}
-              className={`flex items-center gap-5 bg-(--color-charcoal) px-5 py-5 ${
-                t.status === "locked" ? "opacity-60" : ""
-              }`}
+              className="flex items-center gap-5 bg-(--color-charcoal) px-5 py-5"
             >
               <span className="font-display text-lg text-(--color-tarnished-gold)">
                 {t.index}
               </span>
               <span className="flex-1">
                 <span
-                  className={`block font-display text-lg ${
-                    t.status === "incoming"
-                      ? "text-(--color-bone)"
-                      : "tracking-[0.3em] text-(--color-muted-bone)"
-                  }`}
-                >
-                  {t.title}
-                </span>
-                {t.hint && (
-                  <span className="mt-1 block text-sm text-(--color-muted-bone)">
-                    {t.hint}
-                  </span>
-                )}
+                  aria-hidden
+                  className={`block h-3.5 max-w-full rounded-sm bg-(--color-muted-bone)/20 ${t.redactWidth}`}
+                />
+                <span className="sr-only">Track {t.index} — title hidden</span>
               </span>
               <span className="font-display text-xs uppercase tracking-widest text-(--color-muted-bone)">
-                {t.status === "incoming" ? "Incoming" : "Locked"}
+                Locked
               </span>
             </li>
           ))}
@@ -69,6 +58,9 @@ export default function MusicPage() {
         <h2 className="mt-3 font-display text-2xl text-(--color-bone) sm:text-3xl">
           {musicMeta.destination.album}
         </h2>
+        <p className="mt-1 font-display text-sm uppercase tracking-widest text-(--color-gild-glow)">
+          Out {musicMeta.destination.date}
+        </p>
         <p className="mt-3 text-(--color-muted-bone)">
           {musicMeta.destination.note}
         </p>

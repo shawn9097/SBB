@@ -1,34 +1,45 @@
 export type Transmission = {
   index: string;
-  title: string;
-  status: "incoming" | "locked";
-  hint?: string;
+  redactWidth: string;
 };
 
 export const musicMeta = {
   intro: [
-    "Every song is a tenant. Every tenant has a story.",
-    "The first transmissions are incoming. No dates. No promises. Only the signal getting louder.",
+    "Fourteen transmissions from the bottom of the world.",
+    "No names yet. The signal only gets louder — and tenants hear them first.",
   ],
   destination: {
     album: "Throne at the Bottom",
-    note: "The debut. It opens with a death and ends with a coronation.",
+    date: "July 31",
+    note: "The debut album. Fourteen tracks from the bottom of the world. Get on the list to hear it before the world does.",
   },
 };
 
-// The locked four-single pre-release sequence. First teased, the rest redacted
-// to hold the mystery until each one's window opens.
-export const transmissions: Transmission[] = [
-  {
-    index: "01",
-    title: "Stupid Little Bitch",
-    status: "incoming",
-    hint: "The first anthem. Turn it up loud.",
-  },
-  { index: "02", title: "— — — —", status: "locked" },
-  { index: "03", title: "— — — —", status: "locked" },
-  { index: "04", title: "— — — —", status: "locked" },
+// Varied redaction-bar widths so the censored tracklist reads like real hidden titles.
+const REDACT_WIDTHS = [
+  "w-40",
+  "w-28",
+  "w-36",
+  "w-44",
+  "w-32",
+  "w-48",
+  "w-28",
+  "w-40",
+  "w-36",
+  "w-32",
+  "w-44",
+  "w-28",
+  "w-40",
+  "w-36",
 ];
+
+export const transmissions: Transmission[] = Array.from(
+  { length: 14 },
+  (_, i) => ({
+    index: String(i + 1).padStart(2, "0"),
+    redactWidth: REDACT_WIDTHS[i],
+  })
+);
 
 export const socials = [
   { label: "Spotify", href: "#" },
