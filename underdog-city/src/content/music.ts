@@ -41,10 +41,9 @@ export const transmissions: Transmission[] = Array.from(
   })
 );
 
+// Only real, live accounts — no dead links. Add Facebook once we have the URL,
+// Spotify at launch, Instagram/X when the accounts exist.
 export const socials = [
-  { label: "Spotify", href: "#" },
-  { label: "YouTube", href: "#" },
-  { label: "TikTok", href: "#" },
-  { label: "Instagram", href: "#" },
-  { label: "X", href: "#" },
+  { label: "YouTube", href: "https://www.youtube.com/@UnderdogCity" },
+  { label: "TikTok", href: "https://www.tiktok.com/@underdog.city" },
 ];

@@ -88,7 +88,11 @@ export default function Home() {
               The gates open soon.
             </h2>
             <div className="mt-8">
-              <Countdown targetDate={process.env.NEXT_PUBLIC_LAUNCH_DATE} />
+              <Countdown
+              targetDate={
+                process.env.NEXT_PUBLIC_LAUNCH_DATE ?? "2026-07-31T00:00:00"
+              }
+            />
             </div>
           </div>
         </section>
