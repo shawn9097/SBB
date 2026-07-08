@@ -68,8 +68,8 @@ export default function Home() {
                 The Music
               </h2>
               <p className="mt-3 text-sm text-(--color-muted-bone)">
-                The first anthems are incoming. Hear them before the world
-                does.
+                The first anthems are clawing up through the static. Tenants
+                hear them before the world does.
               </p>
               <span className="mt-5 inline-block font-display text-xs uppercase tracking-widest text-(--color-gild-glow)">
                 Listen in →

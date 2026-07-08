@@ -27,24 +27,26 @@ export default function MusicPage() {
           ))}
         </div>
 
-        <ul className="mt-12 space-y-px overflow-hidden rounded-sm border border-(--color-tarnished-gold)/20">
+        <ul className="mt-12 space-y-px overflow-hidden rounded-sm border border-(--color-tarnished-gold)/20 font-mono text-sm">
           {transmissions.map((t) => (
             <li
               key={t.index}
-              className="flex items-center gap-5 bg-(--color-charcoal) px-5 py-5"
+              className="flex items-center gap-3 bg-(--color-charcoal) px-5 py-4"
             >
-              <span className="font-display text-lg text-(--color-tarnished-gold)">
-                {t.index}
+              <span className="flex-1 overflow-hidden whitespace-nowrap">
+                <span className="text-(--color-tarnished-gold)">
+                  {t.index}_
+                </span>
+                <span aria-hidden className="text-(--color-muted-bone)/40">
+                  {t.redact}
+                </span>
+                <span className="text-(--color-muted-bone)">.{t.ext}</span>
+                <span className="sr-only">
+                  Track {t.index} — locked, title hidden
+                </span>
               </span>
-              <span className="flex-1">
-                <span
-                  aria-hidden
-                  className={`block h-3.5 max-w-full rounded-sm bg-(--color-muted-bone)/20 ${t.redactWidth}`}
-                />
-                <span className="sr-only">Track {t.index} — title hidden</span>
-              </span>
-              <span className="font-display text-xs uppercase tracking-widest text-(--color-muted-bone)">
-                Locked
+              <span className="shrink-0 text-xs uppercase tracking-widest text-(--color-crimson)/80">
+                [ Locked ]
               </span>
             </li>
           ))}

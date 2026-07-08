@@ -1,6 +1,7 @@
 export type Transmission = {
   index: string;
-  redactWidth: string;
+  redact: string; // corrupted/hidden filename — block glyphs of varying length
+  ext: string;
 };
 
 export const musicMeta = {
@@ -15,29 +16,47 @@ export const musicMeta = {
   },
 };
 
-// Varied redaction-bar widths so the censored tracklist reads like real hidden titles.
-const REDACT_WIDTHS = [
-  "w-40",
-  "w-28",
-  "w-36",
-  "w-44",
-  "w-32",
-  "w-48",
-  "w-28",
-  "w-40",
-  "w-36",
-  "w-32",
-  "w-44",
-  "w-28",
-  "w-40",
-  "w-36",
+// Corrupted, redacted filenames — imply the tracks exist and are locked, without
+// leaking a single title. Varying lengths read like real hidden names.
+const REDACTIONS = [
+  "████████",
+  "█████",
+  "██████████",
+  "███████",
+  "██████",
+  "████████████",
+  "█████",
+  "█████████",
+  "███████",
+  "██████",
+  "███████████",
+  "█████",
+  "████████",
+  "█████████",
+];
+const EXTS = [
+  "wav",
+  "mp3",
+  "wav",
+  "wav",
+  "mp3",
+  "wav",
+  "mp3",
+  "wav",
+  "wav",
+  "mp3",
+  "wav",
+  "wav",
+  "mp3",
+  "wav",
 ];
 
 export const transmissions: Transmission[] = Array.from(
   { length: 14 },
   (_, i) => ({
     index: String(i + 1).padStart(2, "0"),
-    redactWidth: REDACT_WIDTHS[i],
+    redact: REDACTIONS[i],
+    ext: EXTS[i],
   })
 );
 
