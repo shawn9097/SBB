@@ -54,30 +54,12 @@ export default function Home() {
           <div className="crack-line absolute bottom-0 left-1/2 h-px w-2/3 -translate-x-1/2 opacity-60" />
         </section>
 
-        {/* The two doors: Story + Music */}
+        {/* The Music door */}
         <section className="border-t border-(--color-tarnished-gold)/20 px-6 py-24">
-          <div className="mx-auto grid max-w-4xl gap-6 sm:grid-cols-2">
-            <Link
-              href="/story"
-              className="group rounded-sm border border-(--color-tarnished-gold)/25 bg-(--color-charcoal) p-8 transition hover:border-(--color-gild-glow)/60"
-            >
-              <p className="font-display text-xs uppercase tracking-[0.3em] text-(--color-tarnished-gold)">
-                The Web Serial
-              </p>
-              <h2 className="mt-3 font-display text-2xl text-(--color-bone) group-hover:text-(--color-gild-glow)">
-                The Story
-              </h2>
-              <p className="mt-3 text-sm text-(--color-muted-bone)">
-                He died at the bottom and came back wrong. Read the prologue.
-              </p>
-              <span className="mt-5 inline-block font-display text-xs uppercase tracking-widest text-(--color-gild-glow)">
-                Enter →
-              </span>
-            </Link>
-
+          <div className="mx-auto max-w-md">
             <Link
               href="/music"
-              className="group rounded-sm border border-(--color-tarnished-gold)/25 bg-(--color-charcoal) p-8 transition hover:border-(--color-gild-glow)/60"
+              className="group block rounded-sm border border-(--color-tarnished-gold)/25 bg-(--color-charcoal) p-8 text-center transition hover:border-(--color-gild-glow)/60"
             >
               <p className="font-display text-xs uppercase tracking-[0.3em] text-(--color-tarnished-gold)">
                 The Transmissions

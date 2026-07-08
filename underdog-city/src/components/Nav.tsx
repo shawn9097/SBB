@@ -11,9 +11,6 @@ export default function Nav() {
           Underdog City
         </Link>
         <div className="flex items-center gap-5 text-xs uppercase tracking-widest text-(--color-muted-bone)">
-          <Link href="/story" className="hover:text-(--color-gild-glow)">
-            The Story
-          </Link>
           <Link href="/music" className="hover:text-(--color-gild-glow)">
             The Music
           </Link>
