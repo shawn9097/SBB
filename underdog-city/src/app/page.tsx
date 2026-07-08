@@ -21,10 +21,10 @@ export default function Home() {
           <Image
             src="/hero-mask.webp"
             alt="The masked king of Underdog City"
-            width={320}
-            height={320}
+            width={480}
+            height={480}
             priority
-            className="mb-8 w-[220px] sm:w-[300px]"
+            className="mb-8 w-[280px] sm:w-[440px]"
             style={{
               WebkitMaskImage:
                 "radial-gradient(circle, black 55%, transparent 100%)",
