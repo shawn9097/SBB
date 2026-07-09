@@ -33,9 +33,14 @@ out **July 31, 2026**).
 
 1. Code gets changed in `underdog-city/` and pushed to GitHub.
 2. Vercel notices and builds the site automatically.
-3. If the change is on the **main branch**, it goes straight to
-   theunderdogcity.com. (If it's on a draft branch, it's a "preview" and needs
-   **Promote to Production** in Vercel → Deployments → newest → ⋯ menu.)
+3. Changes on the repo's **default branch** (`claude/claude-md-docs-3cujp` —
+   yes, weird name; it's this repo's "main") go **straight to
+   theunderdogcity.com**, no clicking needed. Any other branch is just a
+   preview.
+
+> **For assistants:** Shawn gave standing permission (July 2026) to commit and
+> push website/doc changes **directly to the default branch** — no PRs, no
+> promote step. Work there.
 
 ## The docs index (`docs/`)
 
