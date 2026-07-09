@@ -50,6 +50,12 @@ export default function Home() {
           <div className="mt-10">
             <EmailCapture />
           </div>
+          <p className="mt-4 max-w-md text-sm text-(--color-muted-bone)">
+            🔑 Your key opens the vault — the album&apos;s title track,{" "}
+            <span className="text-(--color-gild-glow)">
+              before the world hears it.
+            </span>
+          </p>
 
           <div className="crack-line absolute bottom-0 left-1/2 h-px w-2/3 -translate-x-1/2 opacity-60" />
         </section>

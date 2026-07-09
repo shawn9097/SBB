@@ -35,7 +35,7 @@ export default function EmailCapture({ cta = "Claim Your Key" }: { cta?: string 
         aria-live="polite"
         className="font-display text-sm tracking-wide text-(--color-gild-glow)"
       >
-        Check your inbox to confirm your key. Welcome to the underground.
+        Check your inbox to confirm your key — the vault opens from there.
       </p>
     );
   }

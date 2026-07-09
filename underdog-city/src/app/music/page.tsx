@@ -89,6 +89,11 @@ export default function MusicPage() {
           <h2 className="font-display text-xl uppercase tracking-wide text-(--color-bone)">
             Hear them first
           </h2>
+          <p className="max-w-md text-sm text-(--color-muted-bone)">
+            🔑 Tenants get the title track{" "}
+            <span className="text-(--color-gild-glow)">now</span> — the world
+            waits until July 31.
+          </p>
           <EmailCapture />
           <div className="mt-2 flex flex-wrap justify-center gap-5 text-xs uppercase tracking-widest text-(--color-muted-bone)">
             {socials.map((s) => (
