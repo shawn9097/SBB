@@ -1,8 +1,8 @@
 # START HERE — Underdog City Project Guide
 
 *Plain-English map of everything. If you're a new chat/assistant: read this first,
-then work on the `main` branch. If you're future Shawn feeling lost: this is your
-reset button.*
+then work on the default branch (see "How website changes go live" below). If
+you're future Shawn feeling lost: this is your reset button.*
 
 ---
 
@@ -25,9 +25,8 @@ out **July 31, 2026**).
 | **Beehiiv** | the email list ("tenants") — signups from the site land here | app.beehiiv.com |
 | **DistroKid** | distributes the album to Spotify/Apple/etc. | distrokid.com |
 | **GitHub** | stores this project folder (repo: `shawn9097/SBB`) | github.com |
-| **Canva** | graphics (brand kit, banners) | canva.com |
+| **Canva** | the content studio — graphics *and* short-form video edits | canva.com |
 | **Suno** | makes the music | suno.com |
-| **CapCut** | edits the short videos | phone app |
 
 ## How website changes go live
 
@@ -57,7 +56,10 @@ out **July 31, 2026**).
 | `anime-visual-kit.md` | Image/video prompts + the Came Back Wrong storyboard |
 | `music-release-playbook.md` | Deep research: releasing music in 2026 |
 | `youtube-launch-playbook.md` | Deep research: YouTube/Shorts strategy |
-| `Underdog_City_Songbook.md` equivalents | lyrics live in uploaded songbook files/chats |
+| `launch-rollout.md` | The canonical dated rollout (July 9 → 31) |
+| `claude-code-playbook.md` | How to use Claude Code to run this project |
+| `content-log.md` | Log of short-form posts drafted by the `/post` helper |
+| *(lyrics)* | Live in your uploaded songbook files/chats — not in this repo |
 
 ## Key facts (so nothing gets re-decided by accident)
 
@@ -65,11 +67,12 @@ out **July 31, 2026**).
 - **Manifesto:** *We all rule down here. There's only one rule in Underdog City:
   turn that shit up loud.*
 - **Album:** *Throne at the Bottom*, 14 tracks, **July 31, 2026** via DistroKid
-- **Lead single / focus track:** *Came Back Wrong*
+- **Lead single / flagship MV:** *Came Back Wrong* (the album opener + music-video story)
+- **Editorial focus track (Spotify Release Radar):** *Lights Go Low* (aka *Sinners*)
 - **The mask image** = the brand's face everywhere (site hero, all social PFPs)
 - **Site jobs:** capture emails ("Claim Your Key") + tease the album. The novel
-  section was deliberately removed for now (content saved in `src/content/novel.ts`
-  and the story bible) — music first, book later.
+  section was deliberately removed for now (content saved in
+  `underdog-city/src/content/novel.ts` and the story bible) — music first, book later.
 - **Strategy in one line:** build mystery + email list before July 31 → drop the
   album as an event → grind Shorts (1–3/day) so the catalog compounds after.
 
