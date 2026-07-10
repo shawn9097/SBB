@@ -31,11 +31,12 @@ The album's thesis recurs and escalates across: **Down Here (3) → Wear It Bett
 claim on the throne, resolving in the coronation. Villain's "crown of thorns
 turned to gold" is the **kintsugi/gild magic** (story bible §5) stated in song.
 
-## Single rollout
-- **Lead single: Came Back Wrong** — origin-first; syncs with the prologue,
-  Chapter 1, and the flagship music video.
-- **Strongest follow-ups / Shorts drivers:** Stupid Little Bitch (the favorite),
-  Who TF, Down Here, Villain.
+## Rollout — SUPERSEDED (see `docs/launch-rollout.md`)
+The strategy evolved: the whole album now drops **July 31 as one moment — no
+early single**. **"Lights Go Low"** is the pitched editorial/Release-Radar focus
+track; the **title track (Throne at the Bottom)** is the email-vault reward.
+Content-wise, lead discovery with **Villain, Down Here, Who TF** (keep Stupid
+Little Bitch off short-form for brand safety). Full plan: `docs/launch-rollout.md`.
 
 ## Notes
 - Sequence is the working order; reorder freely — it's a starting point, not a vow.
