@@ -5,3 +5,4 @@
 > `- [YYYY-MM-DD] [platform] — [theme] — "[hook, ~6 words]"`
 
 <!-- entries below -->
+- [2026-07-10] tiktok — start-here/tenants — "You found the door"
