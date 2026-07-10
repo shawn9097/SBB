@@ -1,315 +1,112 @@
-# CLAUDE.md — AI Assistant Guide for Warmside
+# CLAUDE.md — AI Assistant Guide
 
-This file is the authoritative guide for AI assistants (Claude Code and similar tools) working in this repository. Keep it up to date as the project evolves.
+This file auto-loads into every Claude Code session. It is the first thing an AI
+assistant reads. Keep it accurate and short.
+
+## ⚠️ This repo holds TWO apps — know which one is active
+
+| | **Underdog City** (ACTIVE) | **Warmside** (DORMANT) |
+|---|---|---|
+| Where | `underdog-city/` | root `src/` + `supabase/` |
+| What | Masked dark-fantasy AI-music project + site | Estimate follow-up SaaS (earlier scaffold) |
+| Live | theunderdogcity.com | not deployed |
+| Work here? | **Yes — default to this** | Only if explicitly asked |
+
+**Unless told otherwise, all work is Underdog City in `underdog-city/`.** The
+full original Warmside guide lives in git history (before this rewrite) if it's
+ever needed again.
 
 ---
 
-## Project Overview
+# UNDERDOG CITY — the active project
 
-**Warmside** is an automated estimate follow-up SaaS for residential contractors (roofers, HVAC, painters, landscapers, fence builders, kitchen/bath remodelers). When a contractor sends an estimate to a prospect, they BCC a unique Warmside address — this triggers a 5-touch SMS+email sequence over 21 days, written in the contractor's voice, that runs on autopilot until the prospect replies. The moment they reply, Warmside stops and forwards the message to the contractor's phone.
+A masked/anonymous **dark-fantasy AI-music project**. Debut album **"Throne at
+the Bottom"** (14 tracks) drops **July 31, 2026** via DistroKid as one moment
+(no early single). The world is the product: fans are **"tenants"** who claim a
+**"key"** (email signup) to unlock **"transmissions."** Thesis: rock bottom
+isn't defeat — it's a throne. *We all rule down here.* 👑
 
-Warmside is the first product under **Vigil**, a Vigil ecosystem of tools for service-based businesses owned by Tom Walker LLC. The core philosophy: Vigil only profits when the client profits.
+Orientation doc for humans: **`START-HERE.md`.** This section is the AI's brief.
+
+## Locked facts
 
 | Field | Value |
 |---|---|
-| Product name | Warmside |
-| Parent brand | Vigil (Tom Walker LLC) |
-| Status | Active development — Phase 1 scaffold complete |
-| Pricing | $129/mo (Standard) · $249/mo (Volume) |
-| Live URL | _TBD_ |
-| Owner | shawn9097 |
+| Album | Throne at the Bottom — 14 tracks, out **July 31, 2026** |
+| Release model | Full album, one drop, no early single |
+| Focus track (editorial / Release Radar) | **Lights Go Low** (aka Sinners) |
+| Email-vault reward | Title track, at `/vault/first-key-e8b84b` |
+| Pre-save link | `https://distrokid.com/hyperfollow/underdogcity/throne-at-the-bottom/` |
+| Site | theunderdogcity.com (Cloudflare domain → Vercel hosting) |
+| Email | Beehiiv (free tier: double opt-in + manual broadcasts) |
+| Socials | YouTube, TikTok, Instagram, Facebook |
+| Content studio | Canva (not CapCut) · songs via Suno |
+| Tech | Next.js 16 (App Router) + Tailwind v4 + `sharp`, on Vercel |
+
+## Brand voice
+
+Dark-fantasy, gothic, ominous, mysterious — aesthetic-first (the Sleep Token /
+Bad Omens crowd). Core motifs: tenants, keys, the vault, redacted transmissions,
+kintsugi gold (crown of thorns turned to gold). Palette: near-black, tarnished/
+antique gold, gild-glow, aged bone-white. Channel tone: **TikTok/IG** cinematic
++ lore · **YouTube** heaviness + hook · **Facebook/Reddit** community.
+
+## Hard rules (never break — applies to every session AND every routine)
+
+- **One CTA per post** — pre-save **or** email key, never both in one breath.
+- **Be honest about AI** — it's an AI music project; lean into "one person built
+  a whole city." Never hide it.
+- **Never buy** followers, streams, or plays. Organic only.
+- **Keep "Stupid Little Bitch" OFF short-form/ads** — album/DSP only (brand
+  safety). Lead discovery with **Villain, Down Here, Who TF**.
+- **Reddit:** never lead with a raw link; contribute first; a fresh AI-music
+  account is fragile — one sub at a time.
+- **Secrets never go in the repo** — the Beehiiv API key etc. live only in
+  Vercel env vars. Never commit `.env` or keys.
+- **Right-size it** — the operator is solo and building the content muscle.
+  Simpler and shipped beats elaborate and frozen. Push back on scope creep.
+
+## How changes ship
+
+- Default/production branch: **`claude/claude-md-docs-3cujp`**. Pushing there
+  **auto-deploys to production** (no promote step).
+- Standing permission (given July 2026): commit and push website/doc changes
+  **directly to that branch** — no PRs, no promote.
+
+## Dev gotchas (learned the hard way)
+
+- The active app is `underdog-city/`. **Run `npm run build` from inside it**,
+  but **always `cd /home/user/SBB` before git commands** (cwd persists between
+  Bash calls; git from inside the subfolder fails pathspec).
+- The build mutates `underdog-city/tsconfig.json` — run
+  `git checkout underdog-city/tsconfig.json` before committing.
+- Fresh containers may lack deps → `cd underdog-city && npm install`.
+
+## Docs index (in `docs/`)
+
+- `claude-code-playbook.md` — how to use Claude Code to run this project
+- `launch-rollout.md` — **canonical** launch plan (July 9 → 31)
+- `throne-at-the-bottom-tracklist.md` — final 14-track sequence + arc
+- `story-bible.md`, `song-themes.md`, `songwriting-craft.md` — world + lyrics
+- `welcome-email-sequence.md`, `tease-content-calendar.md` — copy + calendar
 
 ---
 
-## Repository Structure
+# WARMSIDE — dormant scaffold (root `src/`, `supabase/`)
 
-```
-SBB/
-├── CLAUDE.md                        ← This file
-├── package.json                     ← "warmside" npm package
-├── next.config.ts
-├── tsconfig.json
-├── vercel.json                      ← Cron job config (daily at 9am UTC)
-├── .env.example                     ← All required env vars with descriptions
-├── src/
-│   ├── app/
-│   │   ├── page.tsx                 ← Marketing landing page
-│   │   ├── signup/                  ← Onboarding + Stripe checkout
-│   │   ├── onboarding/              ← Voice Twin intake form
-│   │   ├── dashboard/               ← Contractor dashboard
-│   │   └── api/
-│   │       ├── inbound-email/       ← Postmark BCC webhook → creates prospect + campaign
-│   │       ├── inbound-sms/         ← Twilio webhook → classifies reply, updates campaign
-│   │       ├── stripe/              ← Stripe subscription lifecycle webhooks
-│   │       ├── cron/                ← Daily touchpoint sender (Vercel Cron)
-│   │       └── close-job/           ← Contractor marks job closed → Touchstone Receipt
-│   ├── components/                  ← Reusable UI components
-│   ├── lib/
-│   │   ├── supabase.ts              ← DB client (browser + admin)
-│   │   ├── stripe.ts                ← Stripe client + price IDs
-│   │   ├── twilio.ts                ← SMS sender + reply forwarder
-│   │   ├── resend.ts                ← Email sender
-│   │   ├── claude.ts                ← Voice Twin + niche detection + reply classification
-│   │   ├── sequences.ts             ← All 6 trade sequence templates + variable substitution
-│   │   └── voice-twin.ts            ← (future) Voice DNA helpers
-│   └── types/
-│       └── index.ts                 ← All shared TypeScript types
-└── supabase/
-    └── migrations/
-        └── 001_initial_schema.sql   ← Run this first in Supabase SQL editor
-```
+An earlier, unrelated product (automated estimate follow-up SaaS for
+contractors: Postmark BCC → 5-touch SMS+email sequence, Stripe billing, Supabase
+DB). **Not active, not deployed.** Leave it alone unless explicitly asked to work
+on it. Full historical guide: git history before this file was rewritten.
 
 ---
 
-## Tech Stack
-
-| Layer | Choice | Notes |
-|---|---|---|
-| Language | TypeScript | Strict mode enabled |
-| Runtime / Framework | Next.js 15 (App Router) | API routes + frontend in one repo |
-| Database + Auth | Supabase (Postgres) | RLS enabled; admin client server-only |
-| Payments | Stripe | $129/mo Standard, $249/mo Volume |
-| Email (outbound) | Resend | Sequence follow-up emails |
-| SMS (outbound) | Twilio | Sequence follow-up texts + reply forwarding |
-| Inbound email | Postmark Inbound | Receives BCC'd estimate emails, fires webhook |
-| AI | Claude API (Anthropic) | Voice Twin personalisation + niche detection + reply classification |
-| Deployment | Vercel | Cron via vercel.json (daily 9am UTC) |
-
----
-
-## Development Setup
-
-### Prerequisites
-
-- Node.js >= 20
-- npm >= 10
-- A Supabase project (free tier works for dev)
-- A Stripe account with test keys
-- A Twilio account with a phone number
-- A Resend account
-- A Postmark account (for inbound email)
-- An Anthropic API key
-
-### Install
-
-```sh
-npm install
-```
-
-### Environment Variables
-
-```sh
-cp .env.example .env
-# Fill in all values — see .env.example for descriptions
-```
-
-### Run DB migrations
-
-Open your Supabase project → SQL Editor → paste and run `supabase/migrations/001_initial_schema.sql`.
-
-### Run Locally
-
-```sh
-npm run dev
-# App available at http://localhost:3000
-```
-
----
-
-## Common Commands
-
-| Task | Command |
-|---|---|
-| Install deps | `npm install` |
-| Start dev server | `npm run dev` |
-| Type check | `npx tsc --noEmit` |
-| Lint | `npm run lint` |
-| Build for production | `npm run build` |
-| Run DB migrations | Paste SQL file into Supabase SQL Editor |
-| Test inbound email | POST to `/api/inbound-email` with a Postmark-shaped payload |
-| Test cron manually | `GET /api/cron` with header `x-cron-secret: <CRON_SECRET>` |
-
----
-
-## Architecture & Key Conventions
-
-> **TODO:** Document module boundaries, data flow, and key design decisions as they are made.
-
-### Naming Conventions
-
-> **TODO:** e.g., `camelCase` for variables, `PascalCase` for components/classes, `snake_case` for DB columns, `kebab-case` for file names.
-
-### File Organization
-
-> **TODO:** Describe where new files should be placed (e.g., "API route handlers go in `src/routes/`, business logic in `src/services/`").
-
-### Key Invariants
-
-> **TODO:** List any subtle rules that must always hold (e.g., "never access the DB directly from a route handler — always go through a service").
-
----
-
-## Testing
-
-> **TODO:** Update once a testing framework is chosen.
-
-### Running Tests
-
-```sh
-# TODO: e.g., npm test / pytest / go test ./...
-```
-
-### What Needs Tests
-
-- All public API endpoints
-- All business-logic functions with branching paths
-- Any utility with non-obvious edge cases
-
-### Test File Placement
-
-> **TODO:** e.g., co-located next to source (`foo.test.ts`) or in a top-level `tests/` directory.
-
-### Mocking & Fixtures
-
-> **TODO:** Describe the approach to test data and external service mocking.
-
----
-
-## Code Style & Linting
-
-> **TODO:** Update once a formatter and linter are configured.
-
-| Tool | Config file | Run command |
-|---|---|---|
-| Formatter | _TBD_ | `TODO` |
-| Linter | _TBD_ | `TODO` |
-| Pre-commit hooks | _TBD_ | `TODO` |
-
-### Style Rules (general)
-
-- Prefer clarity over cleverness.
-- Keep functions small and single-purpose.
-- No commented-out code in commits — delete it or open an issue.
-- No `console.log` / `print` debug statements in committed code.
-
----
-
-## Git Workflow
-
-### Branches
-
-| Pattern | Purpose |
-|---|---|
-| `main` | Production-ready code only |
-| `develop` | Integration branch (if used) |
-| `feat/<short-description>` | New features |
-| `fix/<short-description>` | Bug fixes |
-| `chore/<short-description>` | Tooling, deps, infra |
-| `docs/<short-description>` | Documentation only |
-
-### Commit Messages
-
-Follow the [Conventional Commits](https://www.conventionalcommits.org/) format:
-
-```
-<type>(<optional scope>): <short summary>
-
-[optional body]
-```
-
-Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`
-
-Examples:
-```
-feat(auth): add JWT refresh token rotation
-fix(api): handle null user on profile endpoint
-chore: upgrade dependencies to latest
-```
-
-### Pull Requests
-
-- Keep PRs focused — one logical change per PR.
-- Include a clear description of _what_ changed and _why_.
-- All CI checks must pass before merging.
-- At least one review required (once team grows).
-
----
-
-## AI Assistant Guidelines
-
-These rules apply to all Claude Code sessions and similar AI tools working in this repo.
-
-### Always Do
-
-- Read `CLAUDE.md` at the start of every session to pick up recent conventions.
-- Prefer editing existing files over creating new ones.
-- Run the test suite and linter before declaring a task complete (once configured).
-- Use the patterns already established in the codebase — don't introduce new ones without discussion.
-- Keep changes minimal and scoped to the task at hand.
-- Commit frequently with descriptive messages.
-
-### Never Do
-
-- Introduce security vulnerabilities (SQL injection, XSS, command injection, hardcoded secrets, etc.).
-- Add features, abstractions, or refactors that aren't required by the current task.
-- Add comments that explain _what_ code does (good names do that) — only add comments for non-obvious _why_.
-- Commit `.env` files, secrets, credentials, or API keys.
-- Push directly to `main` — always use a feature branch.
-- Delete or overwrite uncommitted user work without explicit confirmation.
-- Use `--no-verify` or bypass pre-commit hooks.
-
-### Security Checklist (before finishing any task)
-
-- [ ] No secrets or tokens hardcoded in source files.
-- [ ] All user input validated/sanitized at system boundaries.
-- [ ] No new dependencies added without justification.
-- [ ] No dangerous shell commands constructed from user input.
-
-### When Unsure
-
-- Ask before taking irreversible actions (force-push, drop table, delete files).
-- Prefer doing less and checking with the user over doing too much autonomously.
-
----
-
-## Environment Variables
-
-> **TODO:** Add rows as env vars are introduced.
-
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| _TBD_ | — | — | — |
-
-Store real values in `.env` (git-ignored). Use `.env.example` with placeholder values checked into the repo.
-
----
-
-## Deployment
-
-> **TODO:** Document staging and production deploy processes once infrastructure is set up.
-
-### Staging
-
-```sh
-# TODO
-```
-
-### Production
-
-```sh
-# TODO
-```
-
-### Rollback
-
-```sh
-# TODO
-```
-
----
-
-## Updating This File
-
-- Update `CLAUDE.md` whenever a new convention is established, a tool is added, or a significant architectural decision is made.
-- Treat this file like code — changes should be reviewed and committed.
-- Remove `TODO` placeholders as they are filled in; a complete CLAUDE.md with no TODOs is the goal.
+# General AI assistant rules
+
+- Read `START-HERE.md` and this file at session start.
+- Prefer editing existing files over creating new ones; keep changes minimal and
+  scoped; commit frequently with clear messages.
+- No secrets/keys in source. Validate user input at boundaries. No `console.log`
+  debug cruft or commented-out code in commits.
+- Ask before irreversible actions (force-push, deleting files, dropping tables).
+- Never use `--no-verify` or disable TLS / unset the proxy.
