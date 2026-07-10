@@ -84,6 +84,14 @@ export default function MusicPage() {
         <p className="mt-3 text-(--color-muted-bone)">
           {musicMeta.destination.note}
         </p>
+        <a
+          href="https://distrokid.com/hyperfollow/underdogcity/throne-at-the-bottom/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-5 inline-block rounded-sm border border-(--color-antique-gold) px-5 py-2.5 font-display text-xs uppercase tracking-widest text-(--color-gild-glow) transition hover:bg-(--color-antique-gold)/15"
+        >
+          Pre-save the album →
+        </a>
 
         <div className="mt-16 flex flex-col items-center gap-6 text-center">
           <h2 className="font-display text-xl uppercase tracking-wide text-(--color-bone)">
