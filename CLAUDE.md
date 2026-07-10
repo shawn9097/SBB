@@ -41,7 +41,23 @@ Orientation doc for humans: **`START-HERE.md`.** This section is the AI's brief.
 | Email | Beehiiv (free tier: double opt-in + manual broadcasts) |
 | Socials | YouTube, TikTok, Instagram, Facebook |
 | Content studio | Canva (not CapCut) · songs via Suno |
-| Tech | Next.js 16 (App Router) + Tailwind v4 + `sharp`, on Vercel |
+| Tech | Next.js 16 (App Router) · React 19 · TS 6 · Tailwind v4, on Vercel (root dir `underdog-city`) |
+
+## App structure (`underdog-city/`)
+
+- **Pages** (App Router, `src/app/`): `/` (`page.tsx` — portal + email capture),
+  `/music` (redacted "transmissions"), `/vault/first-key-e8b84b` (hidden,
+  `noindex` — the reward the emailed key unlocks). Plus `robots.ts`, `sitemap.ts`,
+  and metadata image routes (`icon.png`, `apple-icon.png`, `opengraph-image.png`).
+- **API**: `POST /api/subscribe` → Beehiiv (rate-limited + honeypot; returns 503
+  when env vars unset). No `lib/` dir — helpers live inline and in `src/content/`.
+- **Content** (`src/content/`, plain TS, no CMS): `music.ts` — the 14 redacted
+  `transmissions` + `socials` (**edit music-page data and social links here**);
+  `novel.ts` — staged prose with **no route yet** (planned "The Story" reader).
+- **Components** (`src/components/`): `EmailCapture.tsx`, `Countdown.tsx`, `Nav.tsx`.
+- **Styling**: Tailwind v4 — **no `tailwind.config`**; theme tokens live in
+  `src/app/globals.css` via `@theme inline`. Also **no `vercel.json`** (deploy
+  config is in the Vercel dashboard).
 
 ## Brand voice
 
@@ -81,14 +97,33 @@ antique gold, gild-glow, aged bone-white. Channel tone: **TikTok/IG** cinematic
 - The build mutates `underdog-city/tsconfig.json` — run
   `git checkout underdog-city/tsconfig.json` before committing.
 - Fresh containers may lack deps → `cd underdog-city && npm install`.
+- `sharp` is **not** a package.json dependency — it's only used by the one-off
+  `scripts/make-assets.mjs` asset generator (run ad hoc, e.g. via `npx`).
 
 ## Docs index (in `docs/`)
 
-- `claude-code-playbook.md` — how to use Claude Code to run this project
-- `launch-rollout.md` — **canonical** launch plan (July 9 → 31)
+**Launch / strategy**
+- `underdog-city-launch-plan.md` — master release plan (phases + checklists)
+- `launch-rollout.md` — **canonical** dated rollout (July 9 → 31)
+- `music-release-playbook.md`, `youtube-launch-playbook.md` — deep-research playbooks
+- `tease-content-calendar.md` — day-by-day social calendar
+- `content-log.md` — shared log of posts drafted by the `/post` skill
+
+**World / craft**
+- `story-bible.md` — the world, castes, MC, Season 1 arc
 - `throne-at-the-bottom-tracklist.md` — final 14-track sequence + arc
-- `story-bible.md`, `song-themes.md`, `songwriting-craft.md` — world + lyrics
-- `welcome-email-sequence.md`, `tease-content-calendar.md` — copy + calendar
+- `song-themes.md`, `songwriting-craft.md` — lyric themes + how to write them
+- `suno-playbook.md` — how to prompt Suno · `anime-visual-kit.md` — image/video prompts
+
+**Ops / copy**
+- `claude-code-playbook.md` — how to use Claude Code to run this project
+- `welcome-email-sequence.md` — the 3 Beehiiv welcome emails
+
+## Skills (in `.claude/`)
+
+- `/post [platform] [theme]` (`.claude/skills/post/SKILL.md`) — drafts one
+  ready-to-shoot short-form post (hook · visual · caption · single CTA), tuned to
+  the launch calendar and hard rules, and logs it to `docs/content-log.md`.
 
 ---
 
